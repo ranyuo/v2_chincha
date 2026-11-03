@@ -31,6 +31,27 @@ final class PortalRules
     public static function apply(array $old,array &$new,array $user): void
     {
         self::settings($old,$new);
+        foreach (['paginas', 'programas'] as $collection) foreach (self::alive($new[$collection]) as $row) {
+            if (!self::changed($old[$collection], $row)) continue;
+            $gallery = $row['galeria'] ?? [];
+            if (!is_array($gallery) || !array_is_list($gallery) || count($gallery) > 12) throw new PortalError(422, 'La galería admite hasta doce fotografías adicionales.');
+            foreach ($gallery as $item) {
+                if (!is_array($item) || !is_string($item['src'] ?? null) || $item['src'] === '' || !self::safeImage($item['src'])
+                    || !is_string($item['alt'] ?? null) || !preg_match('//u', $item['alt']) || preg_match_all('/./us', $item['alt']) > 240) throw new PortalError(422, 'Cada imagen de la galería debe tener un archivo válido y una descripción de hasta 240 caracteres.');
+            }
+            if (!empty($row['organigrama']) && !self::safeImage($row['organigrama'])) throw new PortalError(422, 'La imagen del organigrama no es válida.');
+        }
+        foreach (self::alive($new['jerarquica']) as $entry) {
+            $seen = [$entry['id']]; $parent = $entry['superiorId'] ?? '';
+            while ($parent !== '' && $parent !== null) {
+                if (!is_string($parent) || in_array($parent, $seen, true)) throw new PortalError(422, 'Las dependencias del organigrama no pueden formar ciclos.');
+                $seen[] = $parent;
+                $linked = PortalPolicy::find($new['jerarquica'], 'id', $parent);
+                if (!$linked || ($linked['deleted'] ?? false)) throw new PortalError(422, 'La dependencia jerárquica debe corresponder a un cargo existente.');
+                $parent = $linked['superiorId'] ?? '';
+            }
+        }
+        foreach (self::alive($new['servicios']) as $service) if (isset($service['implementado']) && !is_bool($service['implementado'])) throw new PortalError(422, 'La disponibilidad del servicio debe ser una casilla válida.');
         foreach($new['slides'] as $slide)if(!($slide['deleted']??false)&&self::changed($old['slides'],$slide)){
             if(!self::safeLink($slide['enlace']??''))throw new PortalError(422,'El enlace del carrusel debe ser una ruta interna, ext:id o una URL http/https válida.');
             if(!empty($slide['boton'])&&empty($slide['enlace']))throw new PortalError(422,'Indica el enlace del botón del carrusel.');
@@ -96,7 +117,7 @@ final class PortalRules
             if(!($r['deleted']??false)&&self::changed($old['paginas'],$r)&&(!is_string($r['slug']??null)||strlen($r['slug'])>120||!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D',$r['slug'])))throw new PortalError(422,'La URL de la página debe usar letras minúsculas, números y guiones (máximo 120 caracteres).');
             if(!($r['deleted']??false)&&self::changed($old['paginas'],$r)&&($r['estado']??'')==='Publicada'&&trim(strip_tags((string)($r['contenido']??'')))===''&&!preg_match('/<img\b/i',(string)($r['contenido']??'')))throw new PortalError(422,'Completa el contenido antes de publicar la página.');
             if(!$prior){$r['versiones']=[];continue;}if(!self::changed($old['paginas'],$r))continue;
-            $fields=['titulo','contenido','imagen','mensaje','estado'];$edited=false;foreach($fields as $field)if(!PortalPolicy::equal($r[$field]??null,$prior[$field]??null))$edited=true;
+            $fields=['titulo','contenido','imagen','galeria','organigrama','mensaje','estado'];$edited=false;foreach($fields as $field)if(!PortalPolicy::equal($r[$field]??null,$prior[$field]??null))$edited=true;
             $r['versiones']=$prior['versiones']??[];if($edited)$r['versiones']=array_slice([[...array_intersect_key($prior,array_flip($fields)),'fecha'=>$prior['modEn']??date(DATE_ATOM),'por'=>$prior['modPor']??$user['usuario']],...$r['versiones']],0,10);
         }unset($r);
         // Protege las referencias incluso cuando se usa directamente la API.
@@ -135,6 +156,10 @@ final class PortalRules
             $inst=$new['config']['inst']??[];foreach(['nombre','nombreCorto','direccion','telefono','correo','horario','fechaCreacion'] as $key)if(!is_string($inst[$key]??null)||trim($inst[$key])==='')throw new PortalError(422,'Completa el dato institucional '.$key.'.');
             if(!self::date($inst['fechaCreacion'])||!filter_var($inst['correo'],FILTER_VALIDATE_EMAIL))throw new PortalError(422,'La fecha o el correo institucional no es válido.');
             if(!empty($inst['logo'])&&!self::safeImage($inst['logo']))throw new PortalError(422,'El logotipo institucional no es válido.');
+            if (!self::safeLink($inst['bolsaMineduUrl'] ?? '', false)) throw new PortalError(422, 'El enlace de Bolsa laboral debe ser una URL http/https válida.');
+            $active = $inst['serviciosActivos'] ?? [];
+            if (!is_array($active) || !array_is_list($active)) throw new PortalError(422, 'La lista de servicios habilitados no es válida.');
+            foreach ($active as $key) if (!is_string($key) || !in_array($key, ['mesa-de-partes', 'libro-de-reclamaciones', 'consulta-certificados', 'biblioteca', 'correo', 'aula'], true)) throw new PortalError(422, 'La lista de servicios habilitados no es válida.');
         }
         if($changed('redes'))foreach($new['config']['redes']??[] as $url)if(!$link($url,false))throw new PortalError(422,'Las redes sociales requieren una URL http/https válida.');
         if($changed('whatsapp')){$wa=$new['config']['whatsapp']??[];if(!is_bool($wa['activo']??null)||($wa['activo']&&!preg_match('/^[0-9]{9,13}$/D',(string)($wa['numero']??''))))throw new PortalError(422,'WhatsApp requiere una casilla válida y un número de nueve a trece dígitos.');}

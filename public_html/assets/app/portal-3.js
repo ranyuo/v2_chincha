@@ -1144,8 +1144,7 @@ const SV_MODS = {
 const SV_ORDER = ['mpv', 'lr', 'cert', 'bolsa'];
 /* barra de módulos (siempre visible arriba del contenido) */
 function svNav(active) {
-  const it = SV_ORDER.map(k => [SV_MODS[k].slug, SV_MODS[k].short, SV_MODS[k].icon]).concat([['complementarios', 'Complementarios', 'layers']]);
-  return `<nav class="pz-svnav" aria-label="Servicios en línea"><a href="#/servicios" class="pz-svnav-h ${active === '' ? 'on' : ''}" title="Servicios en línea" aria-label="Servicios en línea">${sic('home', 16)}</a>${it.map(([s, l, i]) => `<a href="#/servicios/${s}" class="${s === active ? 'on' : ''}" ${s === active ? 'aria-current="page"' : ''}>${sic(i, 16)}<span>${l}</span></a>`).join('')}</nav>`;
+  return `<nav class="pz-svnav" aria-label="Servicios">${institutionalServiceLinks().map(item => `<a ${linkAttrs(item.href)} ${item.href === '#/servicios/' + active || (!active && item.href === '#/servicios') ? 'aria-current="page" class="on"' : ''}>${esc(item.label)}</a>`).join('')}</nav>`;
 }
 /* cabecera del módulo */
 function svHead(k, chips) {

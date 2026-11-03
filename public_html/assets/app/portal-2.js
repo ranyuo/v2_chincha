@@ -606,7 +606,7 @@ const admVigente = () => P('admisiones').filter(a => (a.estado === 'Publicado' |
 const matVigente = () => P('matriculas').filter(a => (a.estado === 'Publicado' || a._preview) && a.vigente)[0];
 const becaVigente = () => P('becasPeriodos').find(b => b.vigente && b.estado !== 'Borrador');
 const inst = () => DB.config.inst;
-const logoSrc = () => inst().logo || img('ph:logo:' + inst().logoSigla);
+const logoSrc = () => inst().logo || '/assets/chincha/logo-chincha-347d9598.webp';
 const pubNews = () => P('noticias').filter(newsVisible).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
 /* ---------- Navegación ---------- */
@@ -618,7 +618,7 @@ function navModel() {
     { label: 'Programas de Estudio', base: 'programas', items: progs().map(p => ({ label: p.nombre, href: '#/programas/' + p.slug })).concat([{ label: 'Ver todos los programas', href: '#/programas' }]) },
     { label: 'Admisión y Matrículas', base: 'admision|matricula|becas', items: [{ label: 'Admisión ' + (adm ? adm.anio : ''), href: '#/admision' }, { label: 'Matrícula ' + (mat ? mat.periodo : ''), href: '#/matricula' }, { label: 'Becas', href: '#/becas' }] },
     { label: 'Transparencia', base: 'transparencia', items: [['Documentos de Gestión', 'documentos-gestion'], ['Inversiones y Recursos Económicos', 'inversiones'], ['Licenciamiento', 'licenciamiento'], ['TUPA', 'tupa'], ['Estadísticas', 'estadisticas'], ['Convocatorias', 'convocatorias']].map(([label, s]) => ({ label, href: '#/transparencia/' + s })) },
-    { label: 'Servicios', base: 'servicios', items: [{ label: 'Servicios en línea', href: '#/servicios' }, { label: 'Mesa de Partes Virtual', href: '#/servicios/mesa-de-partes' }, { label: 'Libro de Reclamaciones', href: '#/servicios/libro-de-reclamaciones' }, { label: 'Consulta de certificados', href: '#/servicios/consulta-certificados' }, { label: 'Bolsa Laboral', href: '#/servicios/bolsa-laboral' }, { label: 'Servicios Complementarios', href: '#/servicios/complementarios' }, e('biblioteca', 'Biblioteca Virtual'), e('correo', 'Correo Institucional'), e('aula', 'Aula Virtual')].filter(Boolean) },
+    { label: 'Servicios', base: 'servicios', items: institutionalServiceLinks() },
     { label: 'Otras Páginas', base: 'otras|eventos|paginas', items: ['avanza', 'conecta', 'registra', 'titula', 'dre'].map(id => { const x = coll('enlaces').find(l => l.id === id); return x && ext(id) ? { label: x.nombre, href: x.url, ext: true } : null; }).filter(Boolean).concat([{ label: 'Eventos', href: '#/eventos' }, { label: 'Preguntas Frecuentes', href: '#/preguntas-frecuentes' }], extraPages().map(p => ({ label: p.titulo, href: pageURL(p) }))) },
     { label: 'Noticias', base: 'noticias', href: '#/noticias' },
     { label: 'Contáctanos', base: 'contacto', href: '#/contacto' },
@@ -636,7 +636,7 @@ function headerHTML(path) {
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
   <div class="topbar"><div class="wrap"><span>${esc(i.slogan)}</span><div class="tb-links">
     <a href="mailto:${esc(i.correo)}" class="hide-sm">${ic('mail')} ${esc(i.correo)}</a><a href="tel:${esc(i.telefono.replace(/\D/g, ''))}">${ic('phone')} ${esc(i.telefono)}</a>
-    ${ext('correo') ? `<a href="${esc(ext('correo'))}" target="_blank" rel="noopener noreferrer" class="hide-sm">Correo institucional</a>` : ''}${ext('biblioteca') ? `<a href="${esc(ext('biblioteca'))}" target="_blank" rel="noopener noreferrer" class="hide-sm">Biblioteca virtual</a>` : ''}
+    ${institutionalServiceActive('correo') && ext('correo') ? `<a href="${esc(ext('correo'))}" target="_blank" rel="noopener noreferrer" class="hide-sm">Correo institucional</a>` : ''}${institutionalServiceActive('biblioteca') && ext('biblioteca') ? `<a href="${esc(ext('biblioteca'))}" target="_blank" rel="noopener noreferrer" class="hide-sm">Biblioteca virtual</a>` : ''}
     <a href="#/admin" class="tb-intranet">${ic('lock')} Intranet</a><div class="social">${soc}</div></div></div></div>
   <header class="site-header"><div class="wrap">
     <a class="brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(i.nombreCorto)}</strong><small>${esc(i.nombre)}</small><em>${esc(i.slogan)}</em></span></a>
@@ -656,10 +656,10 @@ function footerHTML() {
   <div class="wrap f-cta"><div><strong>¿Listo para construir tu futuro profesional?</strong><span>Conoce nuestros programas y la información de admisión.</span></div><div class="f-cta-b"><a class="btn gold" href="#/admision">Admisión ${new Date().getFullYear()}</a><a class="btn f-ghost" href="#/contacto">Contáctanos</a></div></div>
   <div class="wrap f-main">
     <section class="f-col f-about"><a class="f-brand" href="#/"><img src="${logoSrc()}" alt=""><span><strong>${esc(i.nombreCorto)}</strong><small>${esc(i.nombre)}</small></span></a><p>${esc(i.descripcion)}</p>${soc ? `<div class="social f-social" aria-label="Redes sociales">${soc}</div>` : ''}</section>
-    <nav class="f-col" aria-label="Enlaces del pie de página"><h2>Enlaces rápidos</h2><ul class="f-links">${links.map(([h, l]) => `<li><a href="${h}">${l}</a></li>`).join('')}</ul></nav>
+    <nav class="f-col" aria-label="Enlaces del pie de página"><h2>Enlaces rápidos</h2><ul class="f-links">${links.filter(([h]) => institutionalPublicLink(h)).map(([h, l]) => `<li><a href="${h}">${l}</a></li>`).join('')}</ul></nav>
     <section class="f-col"><h2>Contacto</h2><ul class="f-contact">${ci('map', 'Dirección', `<span>${esc(i.direccion)}</span>`)}${ci('phone', 'Teléfono' + (i.telefonoNota ? ' · ' + esc(i.telefonoNota) : ''), `<a href="tel:${esc(i.telefono.replace(/\D/g, ''))}">${esc(i.telefono)}</a>`)}${ci('mail', 'Correo', `<a href="mailto:${esc(i.correo)}">${esc(i.correo)}</a>`)}${ci('clock', 'Horario de atención', `<span>${esc(i.horario)}</span>`)}</ul></section>
-    <section class="f-col"><h2>Boletín informativo</h2><p>Registra tu interés en recibir el boletín institucional. El envío por correo se habilitará posteriormente.</p><form class="newsletter" data-newsletter style="flex-wrap:wrap"><details style="flex-basis:100%;color:#102b50;background:#fff;padding:8px"><summary>Verificación y privacidad</summary>${captchaHTML('cap-nl')}<label><input type="checkbox" name="acepto" required> Acepto la política de privacidad.</label></details><label class="sr-only" for="nl">Correo electrónico</label><input id="nl" type="email" placeholder="direcciongeneral@iestpchincha.edu.pe" required><button>Suscribirme</button></form>
-      <h2 class="f-h2b">Enlaces institucionales</h2><div class="f-logos"><a ${linkAttrs(ext('minedu') || 'https://www.gob.pe/minedu')}>MINEDU</a><a ${linkAttrs(ext('dre') || 'https://www.dreica.gob.pe/')}>DRE Ica</a><a href="#/servicios/libro-de-reclamaciones" class="f-lr">${ic('book')} Libro de Reclamaciones</a></div></section>
+    <section class="f-col">
+      <h2 class="f-h2b">Enlaces institucionales</h2><div class="f-logos"><a ${linkAttrs(ext('minedu') || 'https://www.gob.pe/minedu')}>MINEDU</a><a ${linkAttrs(ext('dre') || 'https://www.dreica.gob.pe/')}>DRE Ica</a>${institutionalServiceActive('libro-de-reclamaciones') ? `<a href="#/servicios/libro-de-reclamaciones" class="f-lr">${ic('book')} Libro de Reclamaciones</a>` : ''}</div></section>
   </div>
   <div class="f-bottom"><div class="wrap"><span>© ${yearNow()} ${esc(i.nombre)}. Todos los derechos reservados.</span><nav aria-label="Enlaces legales"><a href="#/terminos-de-uso">Términos de uso</a><a href="#/politica-de-privacidad">Política de privacidad</a><a href="#/mapa-del-sitio">Mapa del sitio</a><a href="#/admin">Intranet</a></nav></div></div></footer>
   ${DB.config.whatsapp.activo && DB.config.whatsapp.numero ? `<a class="wa" href="https://wa.me/${esc(DB.config.whatsapp.numero)}?text=${encodeURIComponent(DB.config.whatsapp.mensaje)}" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp">${bic('whatsapp')}</a>` : ''}`;
@@ -675,7 +675,7 @@ function nosotrosSide(active) {
   return `<nav class="side-box" aria-label="Sección Nosotros"><h2>${ic('users').replace('<svg', '<svg style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2"')} Nosotros</h2><ul>${items.map(([s, l]) => `<li><a href="#/nosotros/${s}" ${s === active ? 'aria-current="page"' : ''}>${l}</a></li>`).join('')}</ul></nav>`;
 }
 function sideLinks() {
-  const ls = [['Biblioteca Virtual', ext('biblioteca')], ['Correo Institucional', ext('correo')], ['Avanza MINEDU', ext('avanza')], ['Conecta MINEDU', ext('conecta')], ['Registra MINEDU', ext('registra')], ['Titula MINEDU', ext('titula')]].filter(x => x[1]);
+  const ls = [['Biblioteca Virtual', ext('biblioteca')], ['Correo Institucional', ext('correo')], ['Avanza MINEDU', ext('avanza')], ['Conecta MINEDU', ext('conecta')], ['Registra MINEDU', ext('registra')], ['Titula MINEDU', ext('titula')]].filter(x => x[1] && institutionalPublicLink(x[1]));
   return `<section class="side-box"><h2>Enlaces de interés</h2><ul>${ls.map(([l, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${l}<span class="sr-only"> (enlace externo)</span></a></li>`).join('')}</ul></section>`;
 }
 function sideContact() {
@@ -717,13 +717,13 @@ R('', path => {
   setSEO({ title: '', desc: c.seo.descripcion });
   const blocks = {
     slider: () => { const sl = sortO(P('slides').filter(isPub)); if (!sl.length) return ''; return `<section class="hero" aria-roledescription="carrusel" aria-label="Destacados">${sl.map((s, k) => `<div class="slide ${k ? '' : 'on'}" role="group" aria-roledescription="diapositiva" aria-label="${k + 1} de ${sl.length}">${k ? `<img data-src="${img(s.imagen)}" alt="" decoding="async">` : `<img src="${img(s.imagen)}" alt="" fetchpriority="high">`}<div class="cap"><div class="wrap"><span class="hero-kicker">${ic('grad')} ${esc(inst().nombreCorto)}</span><h2>${esc(s.titulo)}</h2><p>${esc(s.texto)}</p>${s.boton && resolveLink(s.enlace) ? `<a class="btn gold" ${linkAttrs(resolveLink(s.enlace))}>${esc(s.boton)} ${ic('arrow').replace('<svg', '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"')}</a>` : ''}</div></div></div>`).join('')}${sl.length > 1 ? `<button class="hero-arrow l" data-sl="-1" aria-label="Diapositiva anterior">‹</button><button class="hero-arrow r" data-sl="1" aria-label="Diapositiva siguiente">›</button><div class="hero-dots">${sl.map((_, k) => `<button data-dot="${k}" aria-label="Ir a diapositiva ${k + 1}" aria-current="${k === 0}"></button>`).join('')}</div>` : ''}</section>`; },
-    accesos: () => `<section class="wrap quick" aria-label="Accesos rápidos"><div class="grid g4">${h.accesos.map(a => { const u = resolveLink(a.enlace); return u ? `<a ${linkAttrs(u)}><span class="ic">${ic(a.icono)}</span><span><strong>${esc(a.titulo)}</strong><small>${esc(a.texto)}</small></span></a>` : ''; }).join('')}</div></section>`,
+    accesos: () => `<section class="wrap quick" aria-label="Accesos rápidos"><div class="grid g4">${h.accesos.map(a => { const u = resolveLink(a.enlace); return u && institutionalPublicLink(u) ? `<a ${linkAttrs(u)}><span class="ic">${ic(a.icono)}</span><span><strong>${esc(a.titulo)}</strong><small>${esc(a.texto)}</small></span></a>` : ''; }).join('')}</div></section>`,
     bienvenida: () => { const pr = page('presentacion'); const dir = persona((P('jerarquica').find(j => j.esDirector) || {}).personaId); if (!pr || !isPub(pr)) return ''; const ps = (pr.contenido.match(/<p>[\s\S]*?<\/p>/g) || []).slice(0, 2).join(''); return `<section class="sec"><div class="wrap welcome"><img src="${img(dir && dir.foto)}" alt="Fotografía de ${esc(fullName(dir))}" loading="lazy"><div><div class="sec-h" style="text-align:left;margin:0 0 10px"><span class="kicker">Bienvenida</span><h2>Mensaje de la Dirección General</h2></div><div class="prose">${sanitize(ps)}</div><p><strong>${esc(fullName(dir))}</strong><br><span style="color:var(--muted)">${esc((P('jerarquica').find(j => j.esDirector) || {}).cargo || '')}</span></p><a class="btn" href="#/nosotros/presentacion">Leer presentación completa</a></div></div></section>`; },
     cifras: () => `<section class="sec stats" aria-label="Cifras institucionales"><div class="wrap grid g4">${h.cifras.map((x, k) => `<div class="stat"><span class="st-ic">${ic(['calendar', 'grad', 'users', 'award', 'star', 'building'][k % 6])}</span><b>${esc(cifra(x.valor))}</b><span>${esc(x.label)}</span><small>Corte: ${esc(x.corte)}</small></div>`).join('')}</div></section>`,
     programas: () => `<section class="sec alt"><div class="wrap"><div class="sec-h"><span class="kicker">Oferta formativa</span><h2>Programas de estudio</h2><p>Formación profesional técnica de 3 años con título a nombre de la Nación.</p></div><div class="grid g4">${progs().map(p => progCard(p)).join('')}</div></div></section>`,
     noticias: () => { const ns = pubNews().slice(0, 6); return `<section class="sec"><div class="wrap"><div class="sec-h"><span class="kicker">Actualidad</span><h2>Noticias recientes</h2></div>${ns.length ? `<div class="grid g3">${ns.map(newsCard).join('')}</div><p style="text-align:center;margin-top:22px"><a class="btn sec" href="#/noticias">Ver todas las noticias</a></p>` : emptyMsg('noticias')}</div></section>`; },
     beneficios: () => `<section class="sec alt"><div class="wrap"><div class="sec-h"><span class="kicker">Ventajas</span><h2>¿Por qué estudiar en el ${esc(i.nombreCorto)}?</h2></div><div class="grid g4">${h.beneficios.slice(0, 8).map(b => `<div class="card benefit"><span class="ic">${ic(b.i)}</span><div><h3>${esc(b.t)}</h3><p>${esc(b.d)}</p></div></div>`).join('')}</div></div></section>`,
-    jerarquica: () => { const js = sortO(P('jerarquica').filter(isPub)).map(j => ({ j, p: persona(j.personaId) })).filter(x => x.p); return js.length ? `<section class="sec"><div class="wrap"><div class="sec-h"><span class="kicker">Equipo directivo</span><h2>Plana jerárquica</h2></div><div class="people-strip">${js.slice(0, 6).map(({ j, p }) => `<div class="person"><img src="${img(p.foto)}" alt="Fotografía de ${esc(fullName(p))}" loading="lazy"><strong>${esc(fullName(p))}</strong><small>${esc(j.cargo)}</small></div>`).join('')}</div><p style="text-align:center;margin-top:18px"><a class="btn sec" href="#/nosotros/plana-jerarquica">Conocer al equipo</a></p></div></section>` : ''; },
+    jerarquica: () => { const team = institutionalTeam().filter(item => !item.esDirector); return team.length ? `<section class="sec"><div class="wrap"><div class="sec-h"><span class="kicker">Equipo directivo</span><h2>Plana jerárquica</h2></div><div class="people-strip">${team.slice(0, 6).map(item => `<div class="person"><img src="${esc(img(item.p.foto))}" alt="Fotografía de ${esc(fullName(item.p))}" loading="lazy"><strong>${esc(fullName(item.p))}</strong>${item.cargos.map(cargo => `<small>${esc(cargo)}</small>`).join('')}</div>`).join('')}</div><p style="text-align:center;margin-top:18px"><a class="btn sec" href="#/nosotros/plana-jerarquica">Conocer al equipo</a></p></div></section>` : ''; },
     testimonios: () => { const es = P('egresados').filter(isPub).slice(0, 3); return es.length ? `<section class="sec alt"><div class="wrap"><div class="sec-h"><span class="kicker">Egresados</span><h2>Lo que dicen nuestros egresados</h2></div><div class="grid g3">${es.map(e => `<figure class="card testi"><blockquote>“${esc(e.testimonio)}”</blockquote><figcaption class="who"><img src="${img(e.foto)}" alt="" loading="lazy"><div><strong>${esc(e.nombres)}</strong><br><small>${esc((progById(e.programaId) || {}).nombre || '')} · Promoción ${esc(e.anio)}</small></div></figcaption></figure>`).join('')}</div></div></section>` : ''; },
     eventos: () => { const ev = P('eventos').filter(e => isPub(e) && new Date(e.fecha) >= new Date(new Date().toDateString())).sort((a, b) => new Date(a.fecha) - new Date(b.fecha)).slice(0, 3); return ev.length ? `<section class="sec"><div class="wrap"><div class="sec-h"><span class="kicker">Agenda</span><h2>Próximos eventos</h2></div><div class="grid g3">${ev.map(eventCard).join('')}</div><p style="text-align:center;margin-top:18px"><a class="btn sec" href="#/eventos">Ver agenda completa</a></p></div></section>` : ''; },
     enlaces: () => `<section class="sec alt"><div class="wrap"><div class="sec-h"><span class="kicker">Plataformas del Estado</span><h2>Enlaces institucionales</h2></div>${mineduLinks()}</div></section>`,
@@ -755,14 +755,14 @@ function mineduLinks() {
 function richPage(path, clave, slug, crumb, extraBody = '', bannerText = 'Conoce nuestra identidad, historia y el compromiso con la formación técnica.', formatContent = null) {
   const p = page(clave);
   if (!p || !isPub(p)) return notFound(path);
-  const body = `<article class="${['mision','organizacion'].includes(clave) ? 'institution-page' : ''}"><h1>${esc(p.titulo)}</h1>${p.imagen ? `<figure class="figure float-img"><img src="${img(p.imagen)}" alt="Imagen institucional: ${esc(p.titulo)}"><figcaption>${esc(inst().nombreCorto)}</figcaption></figure>` : ''}<div class="prose">${formatContent ? formatContent(p.contenido) : sanitize(p.contenido)}</div><div class="clear"></div>${p.mensaje ? `<blockquote class="quote">“${esc(p.mensaje)}”<br><small>— ${esc(inst().nombreCorto)}</small></blockquote>` : ''}${extraBody}<p style="font-size:12.5px;color:var(--muted);margin-top:18px">Última actualización: <time datetime="${esc(p.modEn)}">${fdate(p.modEn)}</time></p></article>`;
+  const body = `<article class="${['mision','organizacion'].includes(clave) ? 'institution-page' : ''}"><h1>${esc(p.titulo)}</h1>${clave === 'organizacion' ? '' : galleryHTML(p, p.titulo)}<div class="prose">${formatContent ? formatContent(p.contenido) : sanitize(p.contenido)}</div><div class="clear"></div>${p.mensaje ? `<blockquote class="quote">“${esc(p.mensaje)}”<br><small>— ${esc(inst().nombreCorto)}</small></blockquote>` : ''}${extraBody}<p style="font-size:12.5px;color:var(--muted);margin-top:18px">Última actualización: <time datetime="${esc(p.modEn)}">${fdate(p.modEn)}</time></p></article>`;
   return shell(path, { title: p.titulo, desc: clamp(stripTags(p.contenido), 155), crumbs: [['Nosotros', '#/nosotros/presentacion'], [p.titulo]], banner: { title: 'Nosotros', text: bannerText }, side: nosotrosSide(slug) + sidePromo('Formación técnica para un mejor futuro') + sideLinks(), body });
 }
 R('paginas/:slug', (path, q, params) => {
   const p = extraPages().find(p => p.slug === params.slug);
   if (!p) return notFound(path);
   return shell(path, { title: p.titulo, desc: clamp(stripTags(p.contenido), 155), crumbs: [[p.titulo]], banner: { title: p.titulo }, side: null,
-    body: `<article><h1>${esc(p.titulo)}</h1>${p.imagen ? `<figure class="figure"><img src="${img(p.imagen)}" alt="${esc(p.titulo)}"></figure>` : ''}<div class="prose">${sanitize(p.contenido)}</div>${p.mensaje ? `<blockquote class="quote">${esc(p.mensaje)}</blockquote>` : ''}</article>` });
+    body: `<article><h1>${esc(p.titulo)}</h1>${galleryHTML(p, p.titulo)}<div class="prose">${sanitize(p.contenido)}</div>${p.mensaje ? `<blockquote class="quote">${esc(p.mensaje)}</blockquote>` : ''}</article>` });
 });
 R('nosotros', p => richPage(p, 'presentacion', 'presentacion'));
 R('nosotros/presentacion', p => richPage(p, 'presentacion', 'presentacion'));
@@ -788,9 +788,8 @@ function missionContent(content) {
 R('nosotros/mision-vision', p => richPage(p, 'mision', 'mision-vision', null, '', undefined, missionContent));
 R('nosotros/organizacion', p => {
   const entries = sortO(P('jerarquica').filter(isPub));
-  const directors = entries.filter(j=>j.esDirector), units = entries.filter(j=>!j.esDirector);
-  const holder = j => {const pe=persona(j.personaId);return pe?esc(fullName(pe)):'Responsable por confirmar';};
-  const org = `<section class="org-section" aria-labelledby="org-heading"><h2 id="org-heading">Estructura institucional</h2>${directors.map(j=>`<section class="org-lead"><h3>${esc(j.cargo||'Dirección General')}</h3><p>${holder(j)}</p></section>`).join('')}<div class="org-units">${units.map(j=>`<section class="org-unit"><h3>${esc(j.unidad||j.cargo)}</h3><p>${holder(j)}</p>${j.unidad&&j.unidad!==j.cargo?`<small>${esc(j.cargo)}</small>`:''}</section>`).join('')}</div><p class="pz-src">Responsables según la plana jerárquica publicada. <a href="#/nosotros/plana-jerarquica">Consultar el directorio institucional</a>.</p></section><section class="org-section"><h2>Programas de estudio</h2><div class="org-programs">${progs().map(pp=>`<a href="#/programas/${esc(pp.slug)}">${esc(pp.nombre)}</a>`).join('')}</div></section>`;
+  const official = page('organizacion')?.organigrama || (entries.some(entry => entry.superiorId) ? '' : '/assets/chincha/organigrama-mpp-2024.png');
+  const org = official ? `<section class="org-section"><h2>Organigrama institucional</h2>${galleryHTML({ imagen: official }, 'Organigrama institucional')}<p class="note">Fuente: <a href="/assets/chincha/MPP_CHINCHA-ffd3d794.pdf#page=7" target="_blank" rel="noopener noreferrer">Manual de Perfil del Puesto, versión 2024, página 7 del PDF</a>. Consulta el documento completo y amplía la imagen para apreciar sus líneas jerárquicas.</p></section>` : institutionOrgHTML(entries);
   const format = content => {
     const safe=sanitize(content);
     if (page('organizacion')?.modPor !== 'importacion-chincha' || !/^<p>Plana Jerárquica<\/p>/i.test(safe.trim())) return safe;
@@ -802,18 +801,17 @@ R('nosotros/organizacion', p => {
 });
 R('nosotros/reconocimientos', p => {
   const rs = sortO(P('reconocimientos').filter(isPub)).sort((a, b) => b.anio - a.anio);
-  const tl = rs.length ? `<h2>Hitos y logros</h2><div class="timeline">${rs.map(r => `<article class="it"><span class="y">${esc(r.anio)}</span><h3 style="margin:2px 0 4px">${esc(r.titulo)}</h3><p style="margin:0 0 4px">${esc(r.descripcion)}</p>${r.resolucion ? `<small style="color:var(--muted)">${esc(r.resolucion)}</small>` : ''}</article>`).join('')}</div>` : emptyMsg('reconocimientos');
+  const tl = rs.length ? `<h2>Hitos y logros</h2><div class="timeline">${rs.map(r => `<article class="it"><span class="y">${esc(r.anio)}</span>${r.foto ? `<button type="button" class="recognition-photo gallery-enlarge" data-enlarge aria-label="Ampliar imagen de ${esc(r.titulo)}"><img src="${esc(img(r.foto))}" alt="${esc(r.titulo)}" loading="lazy"></button>` : ''}<h3 style="margin:2px 0 4px">${esc(r.titulo)}</h3><p style="margin:0 0 4px">${esc(r.descripcion)}</p>${r.resolucion ? `<small style="color:var(--muted)">${esc(r.resolucion)}</small>` : ''}</article>`).join('')}</div>` : emptyMsg('reconocimientos');
   return richPage(p, 'reconocimientos', 'reconocimientos', null, tl);
 });
 R('nosotros/plana-jerarquica', path => {
   const pg0 = page('jerarquica'); if (!pg0 || !isPub(pg0)) return notFound(path);
-  const js = sortO(P('jerarquica').filter(isPub)).map(j => ({ j, p: persona(j.personaId) })).filter(x => x.p && isPub(x.p) || x.p && x.p.tipo === 'Administrativo');
-  const d = js.find(x => x.j.esDirector); const others = js.filter(x => !x.j.esDirector);
-  const coords = progs().filter(pp => pp.coordinadorId).map(pp => ({ pp, p: persona(pp.coordinadorId) })).filter(x => x.p);
+  const team = institutionalTeam();
+  const d = team.find(item => item.esDirector);
+  const others = team.filter(item => item !== d);
   const body = `<h1>${esc(pg0.titulo)}</h1><p class="lead">${esc(stripTags(pg0.contenido))}</p>
-   ${d ? `<section class="director" aria-label="Dirección General"><img src="${img(d.p.foto)}" alt="Fotografía de ${esc(fullName(d.p))}"><div class="msg"><h2 style="color:#fff;font-size:18px">Mensaje de la Dirección General</h2><blockquote>“${esc(pg0.mensaje)}”</blockquote><strong>${esc(fullName(d.p))}</strong><span>${esc(d.j.cargo)}</span><p style="margin-top:8px"><a href="mailto:${esc(d.p.correo)}" style="color:#cfe0ff">${esc(d.p.correo)}</a></p></div></section>` : ''}
-   ${others.length ? `<div class="collage">${others.map(({ j, p }) => `<figure><img src="${img(p.foto)}" alt="Fotografía de ${esc(fullName(p))}" loading="lazy"><figcaption><strong>${esc(fullName(p))}</strong><small>${esc(j.cargo)}</small><small><a href="mailto:${esc(p.correo)}">${esc(p.correo)}</a></small></figcaption></figure>`).join('')}</div>` : emptyMsg('integrantes')}
-   ${coords.length ? `<h2>Coordinadores de programas de estudio</h2><div class="collage">${coords.map(({ pp, p }) => `<figure><img src="${img(p.foto)}" alt="Fotografía de ${esc(fullName(p))}" loading="lazy"><figcaption><strong>${esc(fullName(p))}</strong><small>Coordinador(a) de ${esc(pp.nombre)}</small></figcaption></figure>`).join('')}</div>` : ''}`;
+    ${d ? `<section class="director" aria-label="Dirección General"><img src="${esc(img(d.p.foto))}" alt="Fotografía de ${esc(fullName(d.p))}"><div class="msg"><h2 style="color:#fff;font-size:18px">Dirección General</h2>${pg0.mensaje ? `<blockquote>“${esc(pg0.mensaje)}”</blockquote>` : ''}<strong>${esc(fullName(d.p))}</strong>${d.cargos.map(cargo => `<span>${esc(cargo)}</span>`).join('')}${d.p.correo ? `<p><a href="mailto:${esc(d.p.correo)}">${esc(d.p.correo)}</a></p>` : ''}</div></section>` : ''}
+    ${others.length ? `<div class="collage">${others.map(item => `<figure><img src="${esc(img(item.p.foto))}" alt="Fotografía de ${esc(fullName(item.p))}" loading="lazy"><figcaption><strong>${esc(fullName(item.p))}</strong>${item.cargos.map(cargo => `<small>${esc(cargo)}</small>`).join('')}${item.p.correo ? `<small><a href="mailto:${esc(item.p.correo)}">${esc(item.p.correo)}</a></small>` : ''}</figcaption></figure>`).join('')}</div>` : ''}`;
   return shell(path, { title: 'Plana Jerárquica', desc: stripTags(pg0.contenido), crumbs: [['Nosotros', '#/nosotros/presentacion'], ['Plana Jerárquica']], banner: { title: 'Nosotros', text: 'Conoce nuestra identidad, historia y el compromiso con la formación técnica.' }, side: nosotrosSide('plana-jerarquica') + sidePromo('Trabajo en equipo para una mejor educación técnica'), body });
 });
 const CATS = () => progs().map(p => ({ id: p.id, label: p.nombre, icon: p.icono })).concat([{ id: 'emp', label: 'Empleabilidad', icon: 'briefcase' }]);
@@ -844,6 +842,7 @@ R('nosotros/campus-e-informes', (path, q) => {
   const i = inst(); const locs = sortO(P('locales').filter(isPub)); const L = locs[0] || { lat: i.lat, lng: i.lng, nombre: 'Sede principal', direccion: i.direccion };
   const locationQuery = encodeURIComponent(L.direccion + ', Perú');
   const body = `<h1>${esc(pg0.titulo)}</h1><p class="lead">${esc(stripTags(pg0.contenido))}</p>
+   ${galleryHTML(pg0, pg0.titulo)}
    <div class="info-cards"><div>${ic('map')}<span><b>Dirección</b><address style="font-style:normal">${esc(i.direccion)}</address></span></div><div>${ic('phone')}<span><b>Teléfono</b><a href="tel:${esc(i.telefono.replace(/\D/g, ''))}">${esc(i.telefono)}</a> (${esc(i.telefonoNota)})</span></div><div>${ic('mail')}<span><b>Correo institucional</b><a href="mailto:${esc(i.correo)}">${esc(i.correo)}</a></span></div></div>
    <section><h2 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">Nuestra ubicación <span style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm sec" href="https://www.google.com/maps/search/?api=1&query=${locationQuery}" target="_blank" rel="noopener noreferrer">Abrir en Google Maps ${ic('ext').replace('<svg', '<svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"')}</a><a class="btn sm" href="https://www.google.com/maps/dir/?api=1&destination=${locationQuery}" target="_blank" rel="noopener noreferrer">Cómo llegar</a></span></h2>
    <iframe class="map" title="Mapa de ubicación de ${esc(i.nombreCorto)}" loading="lazy" src="https://maps.google.com/maps?q=${locationQuery}&output=embed"></iframe></section>
@@ -903,8 +902,10 @@ R('programas/:slug', (path, q, prm) => {
   const hblock = (icon, t) => `<h2>${ic(icon)} ${t}</h2>`;
   const dl = (doc, label, desc, color = '#d93025', ft = doc?.type?.startsWith('image/') ? 'IMG' : 'PDF') => doc ? `<div class="card dl-card"><span class="ft" style="background:${color}">${ft}</span><div><h3>${label}</h3><p>${desc}<br><small>${esc(doc.nombre)} · ${fsize(doc.size)}</small></p><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn xs sec" data-open='${esc(JSON.stringify({ k: label }))}' data-doc="${label === 'Brochure del programa' ? 'brochure' : 'malla'}">${ic('eye').replace('<svg', '<svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"')} Ver ${ft === 'IMG' ? 'imagen' : 'PDF'}</button><button class="btn xs" data-dl="${label === 'Brochure del programa' ? 'brochure' : 'malla'}">${ic('download').replace('<svg', '<svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"')} Descargar</button></div></div></div>` : '';
   const body = `
+   <div class="program-overview ${galleryItems(p).length ? 'has-gallery' : ''}"><div class="program-description">
    <section class="block">${hblock('target', 'Perfil de egreso')}<div class="prose">${sanitize(p.perfil)}</div></section>
-   <details class="block program-fold" data-program-section="campo-laboral"><summary>${hblock('briefcase', 'Campo laboral')}</summary><div class="program-fold-body"><ul class="fields-list">${(p.campoItems || []).filter(Boolean).map(c => `<li>${esc(c)}</li>`).join('')}</ul></div></details>
+   <section class="block" data-program-section="campo-laboral">${hblock('briefcase', 'Campo laboral')}<ul class="fields-list">${(p.campoItems || []).filter(Boolean).map(c => `<li>${esc(c)}</li>`).join('')}</ul></section>
+   </div><div class="program-gallery">${galleryHTML(p, 'Galería de ' + p.nombre)}</div></div>
    <details class="block program-fold" data-program-section="malla-curricular"><summary>${hblock('layers', 'Malla curricular')}</summary><div class="program-fold-body"><p>Certificación modular publicada: ${p.modulos.length} módulos profesionales.${totalC ? ` Total transcrito: ${totalC} créditos.` : ' Consulta las unidades didácticas, horas y créditos en el itinerario oficial descargable.'}</p>${p.modulos.map((m, i) => `<details class="mod"><summary>${esc(m.codigo)} · ${esc(m.nombre)}</summary><div class="tbl-wrap" style="border:0;border-radius:0"><table class="tbl light"><thead><tr><th>Semestre</th><th>Unidad didáctica</th><th class="num">Créditos</th><th class="num">Horas</th></tr></thead><tbody>${m.uds.length ? '' : '<tr><td colspan="4">Unidades didácticas, créditos y horas en el PDF oficial del itinerario formativo.</td></tr>'}${m.uds.map(u => `<tr><td>${esc(u.semestre)}</td><td>${esc(u.nombre)}</td><td class="num">${esc(u.creditos)}</td><td class="num">${esc(u.horas)}</td></tr>`).join('')}<tr><td colspan="4"><b>Experiencias formativas en situaciones reales de trabajo:</b> ${esc(m.efsrt || '—')}</td></tr></tbody></table></div></details>`).join('')}</div></details>
    <section class="block grid g2">${dl(p.brochure, 'Brochure del programa', 'Conoce más sobre el programa, perfil, competencias y oportunidades.')}${dl(p.malla, 'Itinerario formativo publicado (2024)', 'PDF oficial de 2024; consultar actualizaciones con el programa.', '#1e7e34', 'PDF')}</section>
    ${coord ? `<section class="block">${hblock('user', 'Coordinación del programa')}<div class="card" style="display:flex;gap:16px;padding:16px;align-items:center;flex-wrap:wrap"><img src="${img(coord.foto)}" alt="Fotografía de ${esc(fullName(coord))}" style="width:96px;height:96px;border-radius:50%;object-fit:cover"><div style="flex:1;min-width:220px"><strong style="color:var(--hc)">${esc(fullName(coord))}</strong><br><small style="color:var(--muted)">Coordinador(a) del programa · <a href="mailto:${esc(coord.correo)}">${esc(coord.correo)}</a></small>${p.coordinadorMsg ? `<p style="margin:6px 0 0;font-style:italic">“${esc(p.coordinadorMsg)}”</p>` : ''}</div></div></section>` : ''}
@@ -1157,7 +1158,7 @@ R('transparencia/convocatorias', path => {
 });
 
 /* ---------- SERVICIOS ---------- */
-const servSide = a => `<nav class="side-box" aria-label="Servicios"><h2>Servicios</h2><ul>${[['Servicios en línea', ''], ['Mesa de Partes Virtual', 'mesa-de-partes'], ['Libro de Reclamaciones', 'libro-de-reclamaciones'], ['Consulta de certificados', 'consulta-certificados'], ['Bolsa Laboral', 'bolsa-laboral'], ['Servicios Complementarios', 'complementarios']].map(([l, s]) => `<li><a href="#/servicios${s ? '/' + s : ''}" ${s === a ? 'aria-current="page"' : ''}>${l}</a></li>`).join('')}${[['biblioteca', 'Biblioteca Virtual'], ['correo', 'Correo Institucional'], ['aula', 'Aula Virtual']].filter(x => ext(x[0])).map(([id, l]) => `<li><a href="${esc(ext(id))}" target="_blank" rel="noopener noreferrer">${l} ↗</a></li>`).join('')}</ul></nav>`;
+const servSide = a => `<nav class="side-box" aria-label="Servicios"><h2>Servicios</h2><ul>${institutionalServiceLinks().map(item => `<li><a ${linkAttrs(item.href)} ${item.href === '#/servicios/' + a ? 'aria-current="page"' : ''}>${esc(item.label)}</a></li>`).join('')}</ul></nav>`;
 R('servicios', p => ROUTES['servicios/complementarios'](p, new URLSearchParams()));
 R('servicios/complementarios', path => {
   const sv = sortO(P('servicios').filter(isPub));
@@ -1292,7 +1293,7 @@ function searchPublicSite(query) {
   const words = [...new Set(normalized.split(/\s+/))];
   const results = [];
   const add = (title, url, kind, description, extra = '') => {
-    if (!url || !safePortalLink(url)) return;
+    if (!url || !safePortalLink(url) || !institutionalPublicLink(url)) return;
     const titleText = normTitle(title).replace(/[^a-z0-9]+/g, ' ');
     const text = normTitle([title, description, extra].join(' ')).replace(/[^a-z0-9]+/g, ' ');
     if (!words.every(word => text.includes(word))) return;
@@ -1337,6 +1338,7 @@ function notFound(path) { return shell(path, { title: 'Página no encontrada', c
 
 /* ---------- Comportamiento común del portal ---------- */
 function bindPublicChrome() {
+  bindInstitutionalMedia();
   let tt = $('.to-top'); if (!tt) { tt = document.createElement('button'); tt.className = 'to-top'; tt.setAttribute('aria-label', 'Volver arriba'); tt.innerHTML = ic('arrowup'); tt.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' }); document.body.appendChild(tt); window.addEventListener('scroll', () => tt.classList.toggle('show', scrollY > 600 && !document.body.classList.contains('is-admin')), { passive: true }); }
   revealOnScroll();
   const hd = $('.mainnav'); if (hd && !window.__navSh) { window.__navSh = true; window.addEventListener('scroll', () => { const n = $('.mainnav'); n && n.classList.toggle('scrolled', scrollY > 140); }, { passive: true }); }
@@ -1348,17 +1350,16 @@ function bindPublicChrome() {
   });
   if(!window.__publicNavOutside){window.__publicNavOutside=true;document.addEventListener('click', e => { if(!e.target.closest('.mainnav li'))$$('.mainnav li.open').forEach(x => {x.classList.remove('open');$('button.top',x)?.setAttribute('aria-expanded','false');}); });}
   $$('[data-search]').forEach(f => f.onsubmit = e => { e.preventDefault(); go('#/buscar?q=' + encodeURIComponent(f.elements.namedItem('q').value.trim())); });
-  const nl = $('[data-newsletter]'); if (nl) nl.onsubmit = e => { e.preventDefault(); const cap=checkCaptcha(nl,'cap-nl');if(cap)return toast(cap,'err'); const em = $('#nl').value; if (!reEmail.test(em)) return toast('Correo no válido', 'err'); coll('suscriptores').push({ correo: em, fecha: nowISO() }); if (!saveDB()) return; nl.reset(); toast('Tu suscripción quedó registrada. El envío por correo está pendiente de habilitación.', 'ok'); };
+
   // carrusel
   const slides = $$('.slide');
   if (slides.length > 1) {
-    let k = 0, paused = false; const show = n => { k = (n + slides.length) % slides.length;
+    let k = 0; const show = n => { k = (n + slides.length) % slides.length;
       // Solo se descargan la diapositiva visible y la siguiente (antes bajaban todas, ~9 MB en la portada).
       [k, (k + 1) % slides.length].forEach(j => { const im = slides[j].querySelector('img[data-src]'); if (im) { im.src = im.dataset.src; im.removeAttribute('data-src'); } }); slides.forEach((s, i) => { s.classList.toggle('on', i === k); s.inert = i !== k; if (i === k) s.removeAttribute('aria-hidden'); else s.setAttribute('aria-hidden', 'true'); }); $$('[data-dot]').forEach((d, i) => d.setAttribute('aria-current', i === k)); };
     show(0);
     $$('[data-sl]').forEach(b => b.onclick = () => show(k + +b.dataset.sl)); $$('[data-dot]').forEach(b => b.onclick = () => show(+b.dataset.dot));
-    const hero = $('.hero'); hero.onmouseenter = () => paused = true; hero.onmouseleave = () => paused = false; hero.addEventListener('focusin', () => paused = true); hero.addEventListener('focusout', () => paused = false);
-    clearInterval(window.__sl); window.__sl = setInterval(() => { if (!paused && document.body.contains(hero)) show(k + 1); }, 6500);
+    clearInterval(window.__sl);
   }
 }
 function revealOnScroll() {
@@ -2035,9 +2036,9 @@ SPECS.paginas = {
     { n: 'slug', l: 'URL amigable (slug)', req: true, unique: true, side: true, max: 120, ro: fixedPage, hint: fixedPage(w) ? 'La ruta institucional se conserva para mantener sus enlaces.' : 'Se genera a partir del título. Dirección pública: #/paginas/slug.' },
   ],
   beforeSave: w => { if (!fixedPage(w)) { w.slug = slugify(w.slug || w.titulo); w.clave = w.clave || 'custom-' + w.id; } if (/^<|>$/.test(w.contenido || '') === false && ['jerarquica', 'docentes', 'campus'].includes(w.clave)) w.contenido = String(w.contenido || '').replace(/<[^>]+>/g, ''); },
-  afterSave: (w, isNew, prev) => { if (prev) { const snap = { titulo: prev.titulo, contenido: prev.contenido, imagen: prev.imagen, mensaje: prev.mensaje, estado: prev.estado, fecha: prev.modEn, por: prev.modPor }; w.versiones = [snap].concat(prev.versiones || []).slice(0, 10); } },
+  afterSave: (w, isNew, prev) => { if (prev) { const snap = { titulo: prev.titulo, contenido: prev.contenido, imagen: prev.imagen, galeria: prev.galeria || [], organigrama: prev.organigrama || '', mensaje: prev.mensaje, estado: prev.estado, fecha: prev.modEn, por: prev.modPor }; w.versiones = [snap].concat(prev.versiones || []).slice(0, 10); } },
   sideExtra: w => (w.versiones || []).length ? `<hr style="border:0;border-top:1px solid var(--line);width:100%"><b>Versiones anteriores</b>${w.versiones.map((v, i) => `<span style="display:flex;justify-content:space-between;gap:6px;align-items:center">${fshort(v.fecha, true)} · ${esc(v.por)} <button type="button" class="btn xs ghost" data-restv="${i}">Restaurar</button></span>`).join('')}` : '',
-  afterForm: (w, isNew, rer) => { $$('[data-restv]').forEach(b => b.onclick = async () => { const v = w.versiones[+b.dataset.restv]; if (!await confirmBox(`¿Cargar la versión del ${fshort(v.fecha, true)} en el editor? Deberá guardar para aplicarla.`, { ok: 'Cargar versión', danger: false })) return; Object.assign(w, { titulo: v.titulo, contenido: v.contenido, imagen: v.imagen, mensaje: v.mensaje }); route(); toast('Versión cargada en el editor. Revise y guarde.'); }); },
+  afterForm: (w, isNew, rer) => { $$('[data-restv]').forEach(b => b.onclick = async () => { const v = w.versiones[+b.dataset.restv]; if (!await confirmBox(`¿Cargar la versión del ${fshort(v.fecha, true)} en el editor? Deberá guardar para aplicarla.`, { ok: 'Cargar versión', danger: false })) return; Object.assign(w, { titulo: v.titulo, contenido: v.contenido, imagen: v.imagen, galeria: v.galeria || [], organigrama: v.organigrama || '', mensaje: v.mensaje }); route(); toast('Versión cargada en el editor. Revise y guarde.'); }); },
 };
 /* ---------- Admisión ---------- */
 SPECS.admision = {
@@ -2162,7 +2163,9 @@ CUSTOM.config = () => singletonForm({
   fields: [
     { n: 'nombre', l: 'Denominación oficial', req: true, full: true }, { n: 'nombreCorto', l: 'Nombre corto / siglas', req: true }, { n: 'logoSigla', l: 'Texto del logotipo generado', max: 10 },
     { n: 'slogan', l: 'Eslogan', full: true }, { n: 'lema', l: 'Lema de cabecera' }, { n: 'descripcion', l: 'Descripción institucional (pie de página)', t: 'textarea', full: true },
-    { n: 'logo', l: 'Logotipo oficial (opcional, reemplaza al generado)', t: 'image', full: true },
+    { n: 'logo', l: 'Logo institucional original aprobado', t: 'image', full: true, hint: 'Carga el archivo oficial. Se conserva completo y sin animación.' },
+    { n: 'bolsaMineduUrl', l: 'Enlace de Bolsa laboral proporcionado por MINEDU', t: 'url', full: true, hint: 'Confirma el enlace oficial. Si se deja vacío se utiliza el enlace externo Bolsa de Trabajo ya registrado.' },
+    { n: 'serviciosActivos', l: 'Servicios cuya puesta en funcionamiento está confirmada', t: 'checks', full: true, opts: () => CHINCHA_SERVICES, hint: 'Mantén desmarcados los servicios que aún no se han implementado.' },
     { n: 'direccion', l: 'Dirección', req: true, full: true }, { n: 'telefono', l: 'Teléfono', req: true }, { n: 'telefonoNota', l: 'Detalle del teléfono' }, { n: 'correo', l: 'Correo institucional', t: 'email' }, { n: 'horario', l: 'Horario de atención', req: true }, { n: 'horarioSab', l: 'Horario de sábados' },
     { n: 'ruc', l: 'RUC' }, { n: 'codigoModular', l: 'Código modular' }, { n: 'fechaCreacion', l: 'Fecha de creación', t: 'date', req: true }, { n: 'normaCreacion', l: 'Norma de creación' },
     { n: 'lat', l: 'Latitud de la sede', t: 'number', step: 'any' }, { n: 'lng', l: 'Longitud de la sede', t: 'number', step: 'any' },
@@ -2175,7 +2178,7 @@ CUSTOM.config = () => singletonForm({
   onSave: (w, er) => {
     if (w.waOn && !/^\d{9,13}$/.test(w.waNum || '')) er.waNum = 'Número no válido (9 a 13 dígitos).'; if (Object.keys(er).length) return;
     const C = DB.config; const oldName = C.inst.nombre, oldLogo = C.inst.logo; if (C.correoReclamos !== w.correoReclamos) audit('Cambio de parámetro protegido', 'Configuración', 'Correo del Libro de Reclamaciones', `${C.correoReclamos} → ${w.correoReclamos}`);
-    ['nombre', 'nombreCorto', 'logoSigla', 'slogan', 'lema', 'descripcion', 'logo', 'direccion', 'telefono', 'telefonoNota', 'correo', 'horario', 'horarioSab', 'ruc', 'codigoModular', 'fechaCreacion', 'normaCreacion', 'lat', 'lng'].forEach(k => C.inst[k] = w[k]);
+    ['nombre', 'nombreCorto', 'logoSigla', 'slogan', 'lema', 'descripcion', 'logo', 'bolsaMineduUrl', 'serviciosActivos', 'direccion', 'telefono', 'telefonoNota', 'correo', 'horario', 'horarioSab', 'ruc', 'codigoModular', 'fechaCreacion', 'normaCreacion', 'lat', 'lng'].forEach(k => C.inst[k] = w[k]);
     if (oldLogo !== w.logo && DB.academico.cfg.docs?.logoIzq?.src === oldLogo) { const preview = document.querySelector('[data-img=logo] img'); DB.academico.cfg.docs.logoIzq = w.logo ? { src: w.logo, w: preview?.naturalWidth || 240, h: preview?.naturalHeight || 310 } : null; }
     C.redes = { ...C.redes, facebook: w.fb, youtube: w.yt, instagram: w.ig, tiktok: w.tt }; C.seo.titulo = w.seoTitulo === C.seo.titulo ? w.seoTitulo.replace(oldName, w.nombre) : w.seoTitulo; C.seo.descripcion = w.seoDesc; C.correoReclamos = w.correoReclamos; C.correoContacto = w.correoContacto;
     C.whatsapp = { numero: w.waNum, mensaje: w.waMsg, activo: w.waOn }; C.limites = { descripcion: +w.limDesc || 1500, pedido: +w.limPed || 1000 }; C.simularFalloCorreo = w.simFail; Object.keys(IMG_CACHE).forEach(k => delete IMG_CACHE[k]);

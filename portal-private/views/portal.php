@@ -22,6 +22,7 @@
 <script src="<?= portal_asset('portal-2.js') ?>"></script>
 <script src="<?= portal_asset('portal-3.js') ?>"></script>
 <script src="<?= portal_asset('portal-4.js') ?>"></script>
+<script src="<?= portal_asset('portal-observaciones.js') ?>"></script>
 <script src="<?= portal_asset('/portal-server.js') ?>"></script>
 </body>
 </html>
