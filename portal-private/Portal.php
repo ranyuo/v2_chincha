@@ -128,6 +128,8 @@ final class PortalApp
             $publicAcademic['ofertas'] = array_values(array_filter($academic['ofertas'] ?? [], fn ($offer) => ($offer['estado'] ?? '') === 'Publicada'));
             $data['academico'] = $publicAcademic;
             unset($data['config']['contadores']);
+            // El historial editorial puede contener textos e imágenes retirados de la publicación.
+            foreach ($data['paginas'] ?? [] as $index => $page) unset($data['paginas'][$index]['versiones']);
 
         $data['becarios']=array_values(array_map(function($r){$r=array_intersect_key($r,array_flip(['id','periodoId','apellidos','nombres','programaId','tipoId','motivo','estado','dni']));$r['dni']='****'.substr((string)($r['dni']??''),-4);return $r;},array_filter($scholarships,fn($r)=>!($r['deleted']??false)&&($r['estado']??'')==='Publicado')));
         return $data;

@@ -55,7 +55,7 @@ El historial de pruebas, informes y herramientas de desarrollo sigue disponible 
 - Las páginas institucionales compatibles usan fotografías institucionales ya incluidas como presentación inicial; al guardar una galería propia, esa selección prevalece. Una galería vacía conserva únicamente la imagen principal.
 - **Reconocimientos** muestra la foto propia que ya admite cada registro. **Plana jerárquica** reúne los cargos y las coordinaciones en una ficha por persona.
 - **Organización institucional** muestra el organigrama estructural del Manual de Perfil del Puesto, versión 2024, página 7 del PDF conservado en el repositorio. La imagen se puede ampliar y se enlaza su fuente. Para actualizarlo, carga un organigrama aprobado en la página correspondiente. Como alternativa, registra las dependencias oficiales mediante **Plana jerárquica → Depende jerárquicamente de**; el portal dibuja sus conexiones y rechaza ciclos o referencias inexistentes.
-- Los servicios no se anuncian como disponibles por el solo hecho de estar publicados. Confirma su puesta en funcionamiento en **Configuración → Servicios cuya puesta en funcionamiento está confirmada**; para servicios complementarios, marca además **Servicio implementado y disponible para atención** en cada registro. Esto controla su presentación pública, sin borrar registros ni sustituir los permisos de los módulos internos.
+- Los servicios no se anuncian como disponibles por el solo hecho de estar publicados. Confirma su puesta en funcionamiento en **Configuración → Servicios cuya puesta en funcionamiento está confirmada**; para servicios complementarios, marca además **Servicio implementado y disponible para atención** en cada registro. Esto controla su presentación pública, sin borrar registros ni sustituir los permisos de los módulos internos. El correo receptor del Libro de Reclamaciones es obligatorio al habilitar ese servicio; mientras esté deshabilitado, su ausencia no impide guardar otras opciones.
 - **Bolsa laboral** abre una plataforma externa. Se conserva el enlace `bolsa-chincha` existente hasta recibir el enlace confirmado de MINEDU, que puede registrarse en **Configuración → Enlace de Bolsa laboral proporcionado por MINEDU**.
 
 ### Comprobaciones de regresión
@@ -66,7 +66,7 @@ Desde la raíz del repositorio, con PHP 8.2 o posterior:
 php tests/observaciones.php
 ```
 
-Las comprobaciones de navegador requieren Node, Playwright y Chromium. Ejecuta únicamente contra una **instalación local de pruebas**, con la base inicial del repositorio y los servicios aún deshabilitados. El caso de persistencia modifica temporalmente una galería y la restaura; no debe ejecutarse contra producción.
+Las comprobaciones de navegador requieren Node, Playwright y Chromium. Ejecuta únicamente contra una **instalación local de pruebas**, con la base inicial del repositorio y los servicios aún deshabilitados. Los casos de persistencia modifican temporalmente una galería y la activación de un servicio, y después los restauran; no debe ejecutarse contra producción.
 
 ```sh
 PORTAL_TEST_URL=http://127.0.0.1:8081 \

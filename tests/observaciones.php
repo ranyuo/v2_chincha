@@ -29,5 +29,22 @@ verify(fn(&$data) => $data['jerarquica'][0]['superiorId'] = 'missing', true);
 verify(fn(&$data) => $data['config']['inst']['bolsaMineduUrl'] = 'javascript:alert(1)', true);
 verify(fn(&$data) => $data['config']['inst']['serviciosActivos'] = ['mesa-de-partes']);
 verify(fn(&$data) => $data['config']['inst']['serviciosActivos'] = ['missing'], true);
+verify(function (&$data) { $data['config']['correoReclamos'] = ''; $data['config']['inst']['serviciosActivos'] = ['libro-de-reclamaciones']; }, true);
+verify(function (&$data) { $data['config']['correoReclamos'] = 'reclamos@example.test'; $data['config']['inst']['serviciosActivos'] = ['libro-de-reclamaciones']; });
 verify(fn(&$data) => $data['servicios'][0]['implementado'] = 'yes', true);
+// Las versiones retiradas no forman parte de la publicación, pero se conservan para editar.
+$withHistory = $seed;
+$withHistory['paginas'][0]['galeria'] = [['src'=>'/current-image.jpg','alt'=>'Imagen actual']];
+$withHistory['paginas'][0]['versiones'] = [['titulo'=>'Texto retirado','galeria'=>[['src'=>'/removed-image.jpg','alt'=>'Imagen retirada']]]];
+$app = new PortalApp([]);
+$public = (new ReflectionMethod(PortalApp::class, 'publicData'))->invoke($app, $withHistory);
+if (isset($public['paginas'][0]['versiones']) || str_contains(json_encode($public), '/removed-image.jpg')) throw new RuntimeException('Editorial history exposed to visitors');
+++$passed;
+if ($public['paginas'][0]['galeria'] !== $withHistory['paginas'][0]['galeria']) throw new RuntimeException('Published gallery was removed');
+++$passed;
+foreach (['admin', 'imagen'] as $role) {
+    $editor = PortalPolicy::project($withHistory, ['rol'=>$role,'usuario'=>'test-editor'], $public);
+    if (($editor['paginas'][0]['versiones'] ?? null) !== $withHistory['paginas'][0]['versiones']) throw new RuntimeException('Authorized editor lost history');
+    ++$passed;
+}
 echo "PASS: $passed server regression checks\n";

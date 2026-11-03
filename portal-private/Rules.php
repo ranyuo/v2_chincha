@@ -161,6 +161,9 @@ final class PortalRules
             if (!is_array($active) || !array_is_list($active)) throw new PortalError(422, 'La lista de servicios habilitados no es válida.');
             foreach ($active as $key) if (!is_string($key) || !in_array($key, ['mesa-de-partes', 'libro-de-reclamaciones', 'consulta-certificados', 'biblioteca', 'correo', 'aula'], true)) throw new PortalError(422, 'La lista de servicios habilitados no es válida.');
         }
+        if (($changed('inst') || $changed('correoReclamos')) && is_array($new['config']['inst']['serviciosActivos'] ?? null)
+            && in_array('libro-de-reclamaciones', $new['config']['inst']['serviciosActivos'], true)
+            && !filter_var($new['config']['correoReclamos'] ?? '', FILTER_VALIDATE_EMAIL)) throw new PortalError(422, 'Indica un correo receptor válido antes de habilitar el Libro de Reclamaciones.');
         if($changed('redes'))foreach($new['config']['redes']??[] as $url)if(!$link($url,false))throw new PortalError(422,'Las redes sociales requieren una URL http/https válida.');
         if($changed('whatsapp')){$wa=$new['config']['whatsapp']??[];if(!is_bool($wa['activo']??null)||($wa['activo']&&!preg_match('/^[0-9]{9,13}$/D',(string)($wa['numero']??''))))throw new PortalError(422,'WhatsApp requiere una casilla válida y un número de nueve a trece dígitos.');}
         if($changed('uit')||!PortalPolicy::equal($old['tupaDocs']??null,$new['tupaDocs']??null)){

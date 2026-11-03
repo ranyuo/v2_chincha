@@ -95,6 +95,20 @@ const output = process.env.PORTAL_TEST_SCREENSHOTS;
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Desbordamiento horizontal en ' + route);
     }
     await open('#/programas/' + program.slug); await capture('programa-mobile');
+    const programs = await page.evaluate(() => progs().map(program => program.slug));
+    for (const slug of programs) {
+      await open('#/programas/' + slug);
+      await page.locator('.program-gallery').waitFor();
+      await page.locator('#app img').evaluateAll(images => images.forEach(image => { image.loading = 'eager'; }));
+      await page.waitForFunction(() => [...document.querySelectorAll('#app img[src]')].every(image => image.complete && image.naturalWidth > 0), null, { timeout: 10000 });
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Desbordamiento en programa ' + slug);
+      const next = page.locator('.program-gallery [data-gallery-next]');
+      if (await next.count()) {
+        await next.click();
+        assert(await page.locator('.program-gallery [data-gallery-slide]:not([hidden]) img').evaluate(image => image.naturalWidth > 0));
+      }
+    }
+
     // Carga, guardado real y lectura tras recarga; siempre en una base local de pruebas.
     if (process.env.PORTAL_TEST_PASSWORD_FILE) {
       const password = fs.readFileSync(process.env.PORTAL_TEST_PASSWORD_FILE, 'utf8').trim();
@@ -122,7 +136,54 @@ const output = process.env.PORTAL_TEST_SCREENSHOTS;
         await page.evaluate(({ id, original }) => { const program = DB.programas.find(p => p.id === id); if (original === null) delete program.galeria; else program.galeria = original; if (!saveDB()) throw new Error('No se pudo restaurar la galería de prueba'); }, { id: program.id, original });
       }
     }
+    if (process.env.PORTAL_TEST_PASSWORD_FILE) {
+      await page.goto(base + '/#/admin/config');
+      await page.locator('[name=serviciosActivos]').first().waitFor();
+      const activeBefore = await page.evaluate(() => structuredClone(inst().serviciosActivos ?? null));
+      const guest = await browser.newPage();
+      guest.on('pageerror', error => errors.push(error.message));
+      try {
+        await page.locator('[name=serviciosActivos][value="mesa-de-partes"]').check();
+        await page.locator('[data-sf]').getByRole('button', { name: 'Guardar cambios', exact: true }).click();
+        await page.waitForFunction(() => inst().serviciosActivos?.includes('mesa-de-partes'));
+        await page.reload();
+        assert(await page.evaluate(() => institutionalServiceActive('mesa-de-partes')));
+        await guest.goto(base + '/#/servicios'); await guest.locator('.site-footer').waitFor();
+        assert(await guest.locator('.content a[href="#/servicios/mesa-de-partes"]').count());
+        await guest.goto(base + '/#/servicios/mesa-de-partes');
+        await guest.locator('h1').waitFor();
+        assert.equal(await guest.locator('h1').innerText(), 'Mesa de Partes Virtual');
+      } finally {
+        await guest.close();
+        await page.evaluate(active => { if (active === null) delete inst().serviciosActivos; else inst().serviciosActivos = active; if (!saveDB()) throw new Error('No se pudo restaurar la configuración de pruebas'); }, activeBefore);
+      }
+      await page.goto(base + '/#/servicios/mesa-de-partes'); await page.locator('h1').waitFor();
+      assert.equal(await page.locator('h1').innerText(), 'Servicio no disponible');
+      await page.goto(base + '/#/admin/paginas/pg-resena');
+      await page.locator('[data-cf]').waitFor();
+      const expected = await page.evaluate(() => {
+        const work = ADM.work;
+        work.versiones = [{ titulo: work.titulo, contenido: work.contenido, imagen: work.imagen, mensaje: work.mensaje, fecha: new Date().toISOString(), por: 'test' }];
+        work.galeria = [{ src: '/assets/chincha/sede-principal-bb3c09d0.webp', alt: 'Versión reciente' }];
+        const count = recordGalleryDefaults(work).length; route(); return count;
+      });
+      await page.locator('[data-restv]').click();
+      await page.locator('.modal-f [data-r="1"]').click();
+      assert.equal(await page.evaluate(() => ADM.work.galeria.length), expected);
+      // Una galería vacía explícita se restaura vacía; una configurada se copia sin mutar el historial.
+      for (const gallery of [[], [{ src: '/assets/chincha/sede-principal-bb3c09d0.webp', alt: 'Descripción histórica' }]]) {
+        await page.evaluate(gallery => { ADM.work.versiones[0].galeria = gallery; route(); }, gallery);
+        await page.locator('[data-restv]').click(); await page.locator('.modal-f [data-r="1"]').click();
+        assert.equal(await page.evaluate(() => ADM.work.galeria.length), gallery.length);
+        if (gallery.length) {
+          await page.locator('[data-gallery-alt]').first().fill('Descripción modificada en el editor');
+          assert.equal(await page.evaluate(() => ADM.work.versiones[0].galeria[0].alt), 'Descripción histórica');
+        }
+      }
+      // Los casos de restauración usan solo el editor; no guardan las versiones sintéticas.
+      await page.goto(base + '/#/nosotros/resena-historica');
+    }
     assert.deepEqual(errors, []);
-    console.log('PASS: browser checks, desktop/mobile, gallery controls, images, service availability' + (process.env.PORTAL_TEST_PASSWORD_FILE ? ', upload and persistence after reload' : ''));
+    console.log(`PASS: browser checks, desktop/mobile, ${programs.length} programs with loaded images, gallery controls, service availability, version restoration, configuration persistence`  + (process.env.PORTAL_TEST_PASSWORD_FILE ? ', upload and persistence after reload' : ''));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });
