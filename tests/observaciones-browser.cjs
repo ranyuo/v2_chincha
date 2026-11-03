@@ -53,6 +53,36 @@ const output = process.env.PORTAL_TEST_SCREENSHOTS;
     assert.equal(await page.locator('img[src*="organigrama-mpp-2024"]').count(), 1);
     assert(await page.locator('a[href$=".pdf#page=7"]').count());
     await capture('organigrama-desktop');
+    const chartReview = await page.evaluate(() => {
+      const record = page('organizacion'), original = record.organigrama;
+      try {
+        record.organigrama = '/assets/chincha/sede-principal-bb3c09d0.webp';
+        const html = ROUTES['nosotros/organizacion'](['nosotros', 'organizacion']);
+        return { showsCustomChart: html.includes(record.organigrama), citesManual: html.includes('Manual de Perfil del Puesto, versión 2024') };
+      } finally { if (original === undefined) delete record.organigrama; else record.organigrama = original; }
+    });
+    assert(chartReview.showsCustomChart); assert.equal(chartReview.citesManual, false);
+    const editors = await page.evaluate(() => ['privacidad', 'terminos', 'faq', 'resena'].map(key => ({ key, gallery: SPECS.paginas.fields(page(key)).some(field => field.n === 'galeria') })));
+    assert.deepEqual(editors.map(editor => editor.gallery), [false, false, false, true]);
+    const sitemapReview = await page.evaluate(() => {
+      const originalDownload = downloadText, originalServices = inst().serviciosActivos;
+      let xml = '';
+      try {
+        downloadText = text => { xml = text; };
+        inst().serviciosActivos = []; downloadSitemap(); const disabled = xml;
+        inst().serviciosActivos = ['mesa-de-partes', 'libro-de-reclamaciones']; downloadSitemap();
+        return { disabled, enabled: xml };
+      } finally {
+        downloadText = originalDownload;
+        if (originalServices === undefined) delete inst().serviciosActivos; else inst().serviciosActivos = originalServices;
+      }
+    });
+    for (const route of ['/servicios/mesa-de-partes', '/servicios/consulta-certificados', '/transparencia/libro-de-reclamaciones']) assert(!sitemapReview.disabled.includes(route));
+    assert(sitemapReview.disabled.includes('/servicios/bolsa-laboral'));
+    assert(sitemapReview.enabled.includes('/servicios/mesa-de-partes'));
+    assert(sitemapReview.enabled.includes('/transparencia/libro-de-reclamaciones'));
+    assert(!sitemapReview.enabled.includes('/servicios/consulta-certificados'));
+
     await open('#/servicios');
     assert.equal(await page.locator('.service-external a').count(), 1);
     assert.equal(await page.locator('a[href="#/servicios/mesa-de-partes"]').count(), 0);

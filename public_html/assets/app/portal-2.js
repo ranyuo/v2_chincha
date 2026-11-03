@@ -788,8 +788,10 @@ function missionContent(content) {
 R('nosotros/mision-vision', p => richPage(p, 'mision', 'mision-vision', null, '', undefined, missionContent));
 R('nosotros/organizacion', p => {
   const entries = sortO(P('jerarquica').filter(isPub));
-  const official = page('organizacion')?.organigrama || (entries.some(entry => entry.superiorId) ? '' : '/assets/chincha/organigrama-mpp-2024.png');
-  const org = official ? `<section class="org-section"><h2>Organigrama institucional</h2>${galleryHTML({ imagen: official }, 'Organigrama institucional')}<p class="note">Fuente: <a href="/assets/chincha/MPP_CHINCHA-ffd3d794.pdf#page=7" target="_blank" rel="noopener noreferrer">Manual de Perfil del Puesto, versión 2024, página 7 del PDF</a>. Consulta el documento completo y amplía la imagen para apreciar sus líneas jerárquicas.</p></section>` : institutionOrgHTML(entries);
+  const manualChart = '/assets/chincha/organigrama-mpp-2024.png';
+  const official = page('organizacion')?.organigrama || (entries.some(entry => entry.superiorId) ? '' : manualChart);
+  const source = official === manualChart ? '<p class="note">Fuente: <a href="/assets/chincha/MPP_CHINCHA-ffd3d794.pdf#page=7" target="_blank" rel="noopener noreferrer">Manual de Perfil del Puesto, versión 2024, página 7 del PDF</a>. Consulta el documento completo y amplía la imagen para apreciar sus líneas jerárquicas.</p>' : '';
+  const org = official ? `<section class="org-section"><h2>Organigrama institucional</h2>${galleryHTML({ imagen: official }, 'Organigrama institucional')}${source}</section>` : institutionOrgHTML(entries);
   const format = content => {
     const safe=sanitize(content);
     if (page('organizacion')?.modPor !== 'importacion-chincha' || !/^<p>Plana Jerárquica<\/p>/i.test(safe.trim())) return safe;
@@ -1285,7 +1287,7 @@ function downloadSitemap() {
   const base = location.origin + location.pathname + '#';
   const urls = ['/', '/programas', '/admision', '/matricula', '/becas', '/noticias', '/eventos', '/contacto', '/preguntas-frecuentes', '/mapa-del-sitio', '/servicios/mesa-de-partes', '/servicios/bolsa-laboral', '/servicios/consulta-certificados', '/servicios/complementarios'].concat(['presentacion', 'resena-historica', 'mision-vision', 'organizacion', 'reconocimientos', 'plana-jerarquica', 'plana-docente', 'campus-e-informes'].map(s => '/nosotros/' + s)).concat(['documentos-gestion', 'inversiones', 'libro-de-reclamaciones', 'licenciamiento', 'tupa', 'estadisticas', 'convocatorias'].map(s => '/transparencia/' + s)).concat(progs().map(p => '/programas/' + p.slug)).concat(pubNews().map(n => '/noticias/' + n.slug));
   urls.push(...extraPages().map(p => pageURL(p).slice(1)));
-  downloadText(`\x3c?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${esc(base + u)}</loc></url>`).join('\n')}\n</urlset>`, 'sitemap.xml', 'application/xml');
+  downloadText(`\x3c?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.filter(u => institutionalPublicLink('#' + u)).map(u => `  <url><loc>${esc(base + u)}</loc></url>`).join('\n')}\n</urlset>`, 'sitemap.xml', 'application/xml');
 }
 function searchPublicSite(query) {
   const normalized = normTitle(query).replace(/[^a-z0-9]+/g, ' ').trim();

@@ -122,6 +122,7 @@ const institutionalJobURL = () => {
 };
 function institutionalPublicLink(url) {
   if (typeof url !== 'string') return false;
+  if (/^#\/(?:transparencia\/)?libro-de-reclamaciones(?:[?#]|$)/.test(url)) return institutionalServiceActive('libro-de-reclamaciones');
   const key = url.match(/^#\/servicios\/([^?#]+)/)?.[1];
   if (key && CHINCHA_SERVICES.some(([id]) => id === key)) return institutionalServiceActive(key);
   for (const id of ['biblioteca', 'correo', 'aula']) if (ext(id) && url === ext(id)) return institutionalServiceActive(id);
@@ -158,7 +159,7 @@ R('servicios/bolsa-laboral', path => institutionalServicesPage(path, true));
 SPECS.programas.fields.splice(SPECS.programas.fields.findIndex(field => field.n === 'perfil'), 0,
   institutionalGalleryField('Galería para Perfil de egreso y Campo laboral'));
 const originalPageFields = SPECS.paginas.fields;
-SPECS.paginas.fields = work => [...originalPageFields(work), ...(!['jerarquica', 'docentes', 'organizacion'].includes(work.clave) ? [institutionalGalleryField()] : []), ...(work.clave === 'organizacion' ? [{ n: 'organigrama', l: 'Organigrama oficial (imagen completa)', t: 'image', full: true, hint: 'Carga el organigrama aprobado. También puedes definir las dependencias entre cargos en Plana jerárquica.' }] : [])];
+SPECS.paginas.fields = work => [...originalPageFields(work), ...(!['jerarquica', 'docentes', 'organizacion', 'privacidad', 'terminos', 'faq'].includes(work.clave) ? [institutionalGalleryField()] : []), ...(work.clave === 'organizacion' ? [{ n: 'organigrama', l: 'Organigrama oficial (imagen completa)', t: 'image', full: true, hint: 'Carga el organigrama aprobado. También puedes definir las dependencias entre cargos en Plana jerárquica.' }] : [])];
 SPECS.jerarquica.fields.push({ n: 'superiorId', l: 'Depende jerárquicamente de', t: 'select', opts: work => alive('jerarquica').filter(entry => entry.id !== work.id).map(entry => [entry.id, entry.cargo]), hint: 'Selecciona únicamente la dependencia oficial. Déjalo vacío si todavía no está confirmada.' });
 SPECS.servicios.fields.push({ n: 'implementado', l: 'Servicio implementado y disponible para atención', t: 'checkbox', full: true });
 function recordGalleryDefaults(record) {
