@@ -23,6 +23,12 @@ final class PortalContent
             $data['config']['inst']['region']=count($parts)>=2?$parts[count($parts)-1]:'';
             $data['config']['inst']['distrito']=count($parts)>=3?$parts[count($parts)-2]:'';
         }
+        // «Impacto institucional» era Impacto con los colores del portal; desde que todas las estructuras usan esos colores es la misma.
+        if(($data['config']['diseno']??null)==='impacto-chincha')$data['config']['diseno']='impacto';
+        if(isset($data['config']['disenoColores']['impacto-chincha'])&&is_array($data['config']['disenoColores'])){
+            if(empty($data['config']['disenoColores']['impacto']))$data['config']['disenoColores']['impacto']=$data['config']['disenoColores']['impacto-chincha'];
+            unset($data['config']['disenoColores']['impacto-chincha']);
+        }
         if(($data['__v']??0)<14){
             $data['academico']['perms']['acad']['config']=2;
             $data['academico']['perms']['dir']['config']=1;

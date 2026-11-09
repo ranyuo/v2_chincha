@@ -199,59 +199,35 @@ function themeVars(t) {
   else { const sky = mix(t.blue, '#ffffff', .9); let link = t.blue; for (let k = 0; k < 10 && contrast(link, sky) < 4.6; k++) link = mix(link, '#000000', .1); Object.assign(v, { '--sky': sky, '--hc': t.navy, '--link': link, '--blue-rgb': hexRgb(t.blue).join(','), '--card2': mix(t.blue, '#ffffff', .975), '--bg': mix(t.blue, '#ffffff', .955), '--bg2': mix(t.blue, '#ffffff', .935), '--line': mix(t.navy, '#ffffff', .875), '--line2': mix(t.navy, '#ffffff', .77), '--info': t.blue, '--infobg': mix(t.blue, '#ffffff', .9), '--infoink': mix(t.navy, '#000000', .1) }); }
   return v;
 }
-/* Colores de los diseños «Impacto» y «Impacto Chincha»: vacío = color tomado del tema activo */
+/* Todas las estructuras toman sus colores de los 3 colores del portal (Institucional, Botones y enlaces, Destacado).
+   Lo guardado en «Opciones avanzadas» (DB.config.disenoColores) solo reemplaza el color indicado. */
+/* «Impacto» («impacto-chincha» se migra a «impacto» en el servidor) */
 const IMP_KEYS = ['impacto', 'impacto-chincha'];
 const IMP_CAMPOS = [['acento', 'Color de acento', 'Bloque del logotipo, recuadros, títulos destacados y detalles'], ['oscuro', 'Color oscuro', 'Franja de cifras, pie de página y banner de las páginas interiores'], ['boton', 'Botón «Postula»', 'Botón principal de la cabecera'], ['titulos', 'Títulos', 'Color de los títulos sobre fondo blanco']];
-/* combinaciones sugeridas: todas con la paleta del escudo del IESTP Chincha, probadas por contraste */
-const IMP_PRESETS = [
-  ['Chincha institucional', { acento: '#f5c400', oscuro: '#0b1d3f', boton: '#0a7fc2', titulos: '#0b1d3f' }],
-  ['Azul y oro', { acento: '#f5c400', oscuro: '#123a7a', boton: '#0b1d3f', titulos: '#123a7a' }],
-  ['Marino con detalles azules', { acento: '#0a7fc2', oscuro: '#0b1d3f', boton: '#f5c400', titulos: '#0b1d3f' }],
-  ['Noche y dorado', { acento: '#f5c400', oscuro: '#0b1530', boton: '#f5c400', titulos: '#0b1530' }],
-  ['Amarillo y negro', { acento: '#f5c400', oscuro: '#000000', boton: '#0a7fc2', titulos: '#0d0d0d' }],
-];
-function impDefaults(key, t) { return key === 'impacto-chincha' ? { acento: t.gold, oscuro: t.navy, boton: t.blue, titulos: t.navy } : { acento: t.gold, oscuro: '#000000', boton: t.blue, titulos: '#0d0d0d' }; }
+const impDefaults = t => ({ acento: t.gold, oscuro: t.navy, boton: t.blue, titulos: t.navy });
 /* «Horizonte»: color principal, acento y fondo claro */
 const HOR_CAMPOS = [['primario', 'Color principal', 'Bloque del logotipo, franjas, títulos y pie de página'], ['acento', 'Color de acento', 'Botón «Postula», flechas, palabras destacadas y enlaces'], ['fondo', 'Fondo claro', 'Fondo de las secciones claras']];
-const HOR_PRESETS = [
-  ['Azul y naranja', { primario: '#1e3f8a', acento: '#cc4a0a', fondo: '#eef4fd' }],
-  ['Chincha institucional', { primario: '#0b1d3f', acento: '#f5c400', fondo: '#eef3fb' }],
-  ['Azul Chincha y dorado', { primario: '#123a7a', acento: '#f5c400', fondo: '#f1f6fe' }],
-  ['Marino y celeste', { primario: '#0b1d3f', acento: '#1a6fc0', fondo: '#eef5fd' }],
-  ['Azul y verde', { primario: '#163e7a', acento: '#0c7556', fondo: '#eef6f3' }],
-];
 /* «Campus»: color principal, oscuro (botones y tarjetas) y pie */
 const CAM_CAMPOS = [['primario', 'Color principal', 'Barra superior, títulos, botones principales y franja del pie'], ['oscuro', 'Color oscuro', 'Pestaña activa, botones secundarios y tarjetas de «¿Por qué estudiar?»'], ['pie', 'Fondo de enlaces del pie', 'Bloque de enlaces sobre la franja de color']];
-const CAM_PRESETS = [
-  ['Carmesí y negro', { primario: '#d6173c', oscuro: '#111111', pie: '#4a4a4a' }],
-  ['Chincha institucional', { primario: '#0b1d3f', oscuro: '#111827', pie: '#1f2f4d' }],
-  ['Azul Chincha y gris', { primario: '#0a7fc2', oscuro: '#0b1d3f', pie: '#3f4650' }],
-  ['Vino académico', { primario: '#8a1538', oscuro: '#1c1c1c', pie: '#463238' }],
-  ['Verde y grafito', { primario: '#0f7a5c', oscuro: '#1b1f1d', pie: '#3c4541' }],
-];
-/* Clásico, Moderno y Universitario: vacío = colores del tema activo */
+/* Clásico, Moderno y Universitario */
 const BASE_CAMPOS = [['principal', 'Color principal', 'Cabecera, títulos, franjas y pie de página'], ['secundario', 'Color secundario', 'Botones, enlaces y elementos interactivos'], ['acento', 'Color de acento', 'Detalles, líneas, etiquetas y cifras destacadas']];
-const BASE_PRESETS = [
-  ['Chincha institucional', { principal: '#0b1d3f', secundario: '#0a7fc2', acento: '#f5c400' }],
-  ['Azul y oro', { principal: '#123a7a', secundario: '#0b1d3f', acento: '#f5c400' }],
-  ['Marino y celeste', { principal: '#0b1d3f', secundario: '#1a6fc0', acento: '#5fb3f0' }],
-  ['Vino académico', { principal: '#5c1027', secundario: '#8a1538', acento: '#d9a441' }],
-  ['Verde institucional', { principal: '#0f3d2e', secundario: '#0f7a5c', acento: '#e0b13a' }],
-];
 const baseDef = t => ({ principal: t.navy, secundario: t.blue, acento: t.gold });
 /* diseños con colores configurables */
 const DCFG = {
-  'clasico': { campos: BASE_CAMPOS, presets: BASE_PRESETS, def: baseDef },
-  'moderno': { campos: BASE_CAMPOS, presets: BASE_PRESETS, def: baseDef },
-  'universitario': { campos: BASE_CAMPOS, presets: BASE_PRESETS, def: baseDef },
-  'impacto': { campos: IMP_CAMPOS, presets: IMP_PRESETS, def: t => impDefaults('impacto', t) },
-  'impacto-chincha': { campos: IMP_CAMPOS, presets: IMP_PRESETS, def: t => impDefaults('impacto-chincha', t) },
-  'campus': { campos: CAM_CAMPOS, presets: CAM_PRESETS, def: () => ({ primario: '#d6173c', oscuro: '#111111', pie: '#4a4a4a' }) },
-  'horizonte': { campos: HOR_CAMPOS, presets: HOR_PRESETS, def: () => ({ primario: '#1e3f8a', acento: '#cc4a0a', fondo: '#eef4fd' }) },
+  'clasico': { campos: BASE_CAMPOS, def: baseDef },
+  'moderno': { campos: BASE_CAMPOS, def: baseDef },
+  'universitario': { campos: BASE_CAMPOS, def: baseDef },
+  'impacto': { campos: IMP_CAMPOS, def: impDefaults },
+  'campus': { campos: CAM_CAMPOS, def: t => ({ primario: t.navy, oscuro: mix(t.navy, '#000000', .55), pie: mix(t.navy, '#000000', .3) }) },
+  'horizonte': { campos: HOR_CAMPOS, def: t => ({ primario: t.navy, acento: t.gold, fondo: mix(t.blue, '#ffffff', .92) }) },
 };
 const dOn = bg => contrast('#ffffff', bg) >= contrast('#111111', bg) ? '#ffffff' : '#111111';
 const hexOk = (v, f) => /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : f;
-function impColors(key, t) { const cf = DCFG[key]; t = Object.assign({}, t, { navy: hexOk(t && t.navy, '#0c2a5b'), navy2: hexOk(t && t.navy2, '#16449a'), blue: hexOk(t && t.blue, '#1e5fc8'), gold: hexOk(t && t.gold, '#f2b705') }); const d = cf.def(t), c = ((DB.config.disenoColores || {})[key]) || {}; const o = {}; for (const [k] of cf.campos) o[k] = /^#[0-9a-f]{6}$/i.test(c[k] || '') ? c[k] : d[k]; return o; }
+/* Colores del tema con valores de respaldo válidos */
+const themeSafe = t => Object.assign({}, t, { navy: hexOk(t && t.navy, '#0b1d3f'), navy2: hexOk(t && t.navy2, '#123a7a'), blue: hexOk(t && t.blue, '#0a7fc2'), gold: hexOk(t && t.gold, '#f5c400') });
+/* Combinaciones para «Opciones avanzadas»: las mismas del paso 2, traducidas a los campos de cada estructura */
+const dPresets = cf => Object.values(DB.config.temas || {}).map(t => [t.label, cf.def(themeSafe(t))]);
+function impColors(key, t) { const cf = DCFG[key]; t = Object.assign({}, t, { navy: hexOk(t && t.navy, '#0b1d3f'), navy2: hexOk(t && t.navy2, '#123a7a'), blue: hexOk(t && t.blue, '#0a7fc2'), gold: hexOk(t && t.gold, '#f5c400') }); const d = cf.def(t), c = ((DB.config.disenoColores || {})[key]) || {}; const o = {}; for (const [k] of cf.campos) o[k] = /^#[0-9a-f]{6}$/i.test(c[k] || '') ? c[k] : d[k]; return o; }
 function impApplyColors(t) {
   let st = document.getElementById('imp-vars'); const key = DB.config.diseno;
   if (!DCFG[key]) { if (st) st.textContent = ''; return; }
@@ -268,16 +244,17 @@ function impApplyColors(t) {
   if (key === 'campus') { const txt = (() => { let x = c.primario; for (let k = 0; k < 14 && contrast(x, '#ffffff') < 4.5; k++) x = mix(x, '#000000', .08); return x; })();
     st.textContent = `:root[data-layout="campus"] body:not(.is-admin){--kp:${c.primario};--kpo:${on(c.primario)};--kpd:${mix(c.primario, '#000000', .2)};--kpt:${txt};--kpl:${mix(c.primario, '#ffffff', .92)};--kk:${c.oscuro};--kko:${on(c.oscuro)};--kf:${c.pie};--kfo:${on(c.pie)}}`; return; }
   if (key === 'horizonte') { st.textContent = `:root[data-layout="horizonte"] body:not(.is-admin){--hp:${c.primario};--hpo:${on(c.primario)};--hpd:${mix(c.primario, '#000000', .28)};--hpl:${mix(c.primario, '#ffffff', .55)};--ha:${c.acento};--hao:${on(c.acento)};--hat:${(() => { if (contrast(c.acento, '#ffffff') >= 4.5) return c.acento; if (contrast(c.acento, '#ffffff') >= 3.2) { let x = c.acento; for (let k = 0; k < 8 && contrast(x, '#ffffff') < 4.5; k++) x = mix(x, '#000000', .06); return x; } let x = mix(c.primario, '#2f7cf6', .55); for (let k = 0; k < 12 && contrast(x, '#ffffff') < 4.5; k++) x = mix(x, '#000000', .08); return x; })()};--hf:${c.fondo}}`; return; }
-  st.textContent = `:root[data-layout="impacto"] body:not(.is-admin){--iy:${c.acento};--ion:${on(c.acento)};--id:${c.oscuro};--icta:${c.boton};--icton:${on(c.boton)};--ik:${c.titulos}}`;
+  // Títulos en el color destacado sobre fondo claro: se oscurece lo justo para leerse (3:1, texto grande).
+  const iyt = (() => { let x = c.acento; for (let k = 0; k < 16 && contrast(x, '#ffffff') < 3; k++) x = mix(x, '#000000', .08); return x; })();
+  st.textContent = `:root[data-layout="impacto"] body:not(.is-admin){--iyt:${iyt};--iy:${c.acento};--ion:${on(c.acento)};--id:${c.oscuro};--icta:${c.boton};--icton:${on(c.boton)};--ik:${c.titulos}}`;
 }
 const DISENOS = [
   ['clasico', 'Clásico institucional', 'Diseño original del portal: cabecera institucional, carrusel y bloques en tarjetas.'],
   ['moderno', 'Moderno', 'Portada a pantalla completa, menú flotante con efecto vidrio, tarjetas amplias con esquinas redondeadas y sombras suaves.'],
   ['editorial', 'Editorial', 'Estilo de revista digital: tipografía grande, líneas finas, fondo claro y la noticia principal destacada en grande.'],
-  ['impacto', 'Impacto', 'Alto contraste en amarillo y negro: logotipo en bloque de color, portada a pantalla completa, títulos condensados en mayúsculas, mosaico de programas, recuadros de color y franja negra de logros. El menú principal no cambia.'],
-  ['impacto-chincha', 'Impacto Chincha', 'La estructura de Impacto con los colores del IESTP Chincha: logotipo en bloque dorado, franjas y pie en azul marino del escudo y botón «Postula» en azul. Los colores se pueden ajustar.'],
-  ['campus', 'Campus', 'Portal de universidad con barra superior de color, menú en mayúsculas sobre la portada, títulos centrados subrayados, tarjetas de programas en capas de colores, botones flotantes «Postula», eventos y noticias en tarjetas y pie en dos bloques. Los colores se pueden ajustar.'],
-  ['horizonte', 'Horizonte', 'Portal de universidad moderna: cabecera con logotipo en bloque de color, tarjeta translúcida sobre la portada, panel de oferta formativa, franjas de color con esquinas redondeadas y títulos en dos colores. Los colores se pueden ajustar.'],
+  ['impacto', 'Impacto', 'Alto contraste: logotipo en bloque del color destacado, portada a pantalla completa, títulos condensados en mayúsculas, mosaico de programas, recuadros de color y franja oscura de logros. El menú principal no cambia.'],
+  ['campus', 'Campus', 'Portal de universidad con barra superior de color, menú en mayúsculas sobre la portada, títulos centrados subrayados, tarjetas de programas en capas de color, botones flotantes «Postula», eventos y noticias en tarjetas y pie en dos bloques.'],
+  ['horizonte', 'Horizonte', 'Portal de universidad moderna: cabecera con logotipo en bloque de color, tarjeta translúcida sobre la portada, panel de oferta formativa, franjas de color con esquinas redondeadas y títulos en dos colores.'],
   ['universitario', 'Universitario', 'Portal de estilo universitario: cabecera oscura con logotipo en bloque blanco, programas con íconos circulares, franjas oscuras y carruseles en paneles. El menú principal no cambia.'],
 ];
 function applyTheme() {
@@ -288,6 +265,9 @@ function applyTheme() {
   if (t.modo === 'oscuro') document.documentElement.dataset.mode = 'dark'; else delete document.documentElement.dataset.mode;
   const lay = DB.config.diseno; if (DISENOS.some(d => d[0] === lay) && lay !== 'clasico') document.documentElement.dataset.layout = IMP_KEYS.includes(lay) ? 'impacto' : lay; else delete document.documentElement.dataset.layout;
   impApplyColors(t);
+  // Impacto, Campus, Horizonte y Editorial no tienen versión oscura: con una combinación oscura, el sitio público usa sus tonos claros (el panel sigue oscuro).
+  let nd = document.getElementById('nodark-vars'); if (!nd) { nd = document.createElement('style'); nd.id = 'nodark-vars'; document.head.appendChild(nd); }
+  nd.textContent = t.modo === 'oscuro' ? NO_DARK.map(k => `:root[data-layout="${k}"] body:not(.is-admin)`).join(',') + '{' + Object.entries(Object.assign({}, LIGHT_NEUTRALS_ALL, themeVars(Object.assign({}, t, { modo: 'claro' })))).map(([k, x]) => `${k}:${x}`).join(';') + ';color-scheme:light;color:var(--ink);background:var(--page)}' : '';
   if (IMP_KEYS.includes(lay) && !document.getElementById('font-impacto')) { const l = document.createElement('link'); l.id = 'font-impacto'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap'; document.head.appendChild(l); }
   TC = { navy: t.navy, navy2: t.navy2, blue: t.blue, gold: t.gold };
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = t.navy;
@@ -710,6 +690,9 @@ const admVigente = () => P('admisiones').filter(a => (a.estado === 'Publicado' |
 const matVigente = () => P('matriculas').filter(a => (a.estado === 'Publicado' || a._preview) && a.vigente)[0];
 const becaVigente = () => P('becasPeriodos').find(b => b.vigente && b.estado !== 'Borrador');
 const inst = () => DB.config.inst;
+/* Texto junto al logotipo: el configurado o, si está vacío, el nombre corto oficial completo (sin abreviar), en tamaño reducido (clase b-long) para que no desborde la cabecera. */
+const brandLong = () => !String(inst().logoSigla || '').trim();
+const brandSigla = () => brandLong() ? inst().nombreCorto : String(inst().logoSigla).trim();
 const logoSrc = () => inst().logo || '/assets/chincha/logo-chincha-347d9598.webp';
 const pubNews = () => P('noticias').filter(newsVisible).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -854,7 +837,7 @@ function impHeader(path, nav, cur) {
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
   <div class="i-top"><div class="wrap">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}<button type="button" class="u-sb i-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button></div></div>
   <header class="site-header i-head"><div class="i-bar">
-    <a class="i-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><small>${esc(i.nombreCorto)}</small></span></a>
+    <a class="i-brand${brandLong() ? ' b-long' : ''}" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(brandSigla())}</strong>${brandLong() ? '' : `<small>${esc(i.nombreCorto)}</small>`}</span></a>
     <nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
     <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
     <a class="i-cta" href="#/admision">Postula · Admisión ${esc(adm ? adm.anio : y)}</a>
@@ -912,7 +895,7 @@ function horHeader(path, nav, cur) {
   const i = inst(); const adm = admVigente(); const y = new Date().getFullYear();
   const top = [['#/servicios', 'Servicios en línea'], [ext('aula'), 'Plataforma Virtual'], [ext('correo'), 'Correo institucional'], [ext('biblioteca'), 'Biblioteca virtual'], ['#/admin', 'Intranet']].filter(x => x[0]);
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
-  <header class="site-header h-head"><a class="h-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><small>Instituto de Educación Superior</small><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><em>${esc(i.slogan)}</em></span></a>
+  <header class="site-header h-head"><a class="h-brand${brandLong() ? ' b-long' : ''}" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span>${brandLong() ? '' : '<small>Instituto de Educación Superior</small>'}<strong>${esc(brandSigla())}</strong><em>${esc(i.slogan)}</em></span></a>
     <div class="h-rows"><div class="h-top">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}<button type="button" class="u-sb h-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button></div>
       <div class="h-main"><nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
         <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
@@ -931,7 +914,7 @@ function horFooter() {
     <div>${grp('Programas de estudio', progs().map(p => ['#/programas/' + p.slug, p.nombre]))}${grp('Institucional', [['#/nosotros/presentacion', 'Nosotros'], ['#/noticias', 'Noticias'], ['#/eventos', 'Eventos'], ['#/contacto', 'Contáctanos'], ['#/admin', 'Intranet']])}</div>
     <div class="h-fc"><h3>Sede institucional</h3><p>${ic('map')}<span>${esc(i.direccion)}</span></p><p>${ic('phone')}<a href="tel:${esc(tel)}">${esc(i.telefono)}</a></p><p>${ic('mail')}<a href="mailto:${esc(i.correo)}">${esc(i.correo)}</a></p><p>${ic('clock')}<span>${esc(i.horario)}</span></p>
       <h3>Enlaces institucionales</h3><p class="h-fl"><a ${linkAttrs(ext('minedu') || 'https://www.gob.pe/minedu')}>MINEDU</a>${ext('dre') ? `<a ${linkAttrs(ext('dre'))}>${esc(dreLabel())}</a>` : ''}</p></div>
-  </div><div class="wrap h-fb"><a class="h-fbrand" href="#/"><small>Instituto de Educación Superior</small><strong>${esc(i.logoSigla || i.nombreCorto)}</strong></a><nav aria-label="Enlaces legales"><a href="#/politica-de-privacidad">Política de privacidad</a><a href="#/terminos-de-uso">Términos de uso</a><a href="#/transparencia/documentos-gestion">Transparencia</a></nav><div class="h-soc h-soc-s">${soc}</div></div>
+  </div><div class="wrap h-fb"><a class="h-fbrand${brandLong() ? ' b-long' : ''}" href="#/">${brandLong() ? '' : '<small>Instituto de Educación Superior</small>'}<strong>${esc(brandSigla())}</strong></a><nav aria-label="Enlaces legales"><a href="#/politica-de-privacidad">Política de privacidad</a><a href="#/terminos-de-uso">Términos de uso</a><a href="#/transparencia/documentos-gestion">Transparencia</a></nav><div class="h-soc h-soc-s">${soc}</div></div>
   <div class="h-copy">© ${yearNow()} ${esc(i.nombre)}${i.ruc ? ' · RUC ' + esc(i.ruc) : ''}</div></footer>
   ${DB.config.whatsapp.activo && DB.config.whatsapp.numero ? `<a class="wa" href="https://wa.me/${esc(DB.config.whatsapp.numero)}?text=${encodeURIComponent(DB.config.whatsapp.mensaje)}" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp">${bic('whatsapp')}</a>` : ''}`;
 }
@@ -968,7 +951,7 @@ function horBlocks(base, h, i) {
 /* ===== Diseño «Campus»: barra de color, menú en mayúsculas sobre la portada y tarjetas en capas ===== */
 const isCam = () => !!(DB && DB.config && DB.config.diseno === 'campus') && !document.body.classList.contains('is-admin');
 const kTtl = (t, tag = 'h2', cls = '') => `<${tag} class="k-ttl ${cls}">${t}</${tag}>`;
-const K_TONOS = ['var(--kp)', '#0b7d87', '#2a4f8f', '#8a5596'];
+const K_TONOS = ['var(--kp)', 'var(--blue)', 'var(--kk)', 'var(--navy2)']; // capas de color de Campus: todas salen de los colores del portal
 function camHeader(path, nav, cur) {
   const i = inst(); const r = DB.config.redes || {};
   const soc = ['facebook', 'youtube', 'instagram', 'tiktok'].filter(k => r[k]).map(k => `<a href="${esc(r[k])}" target="_blank" rel="noopener noreferrer" aria-label="${k} (se abre en una pestaña nueva)">${bic(k)}</a>`).join('');
@@ -976,7 +959,7 @@ function camHeader(path, nav, cur) {
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
   <div class="k-top"><div class="k-tw">${soc ? `<div class="k-soc">${soc}</div>` : ''}<nav class="k-tl" aria-label="Accesos">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}</nav><a class="k-portal" href="#/admin">Intranet</a>${ext('aula') ? `<a class="k-portal" ${linkAttrs(ext('aula'))}>Plataforma virtual<span class="sr-only"> (enlace externo)</span></a>` : ''}</div></div>
   <header class="site-header k-head"><div class="k-bar">
-    <a class="k-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><small>${esc(i.nombreCorto)}</small></span></a>
+    <a class="k-brand${brandLong() ? ' b-long' : ''}" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(brandSigla())}</strong>${brandLong() ? '' : `<small>${esc(i.nombreCorto)}</small>`}</span></a>
     <nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
       <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
     <button type="button" class="u-sb k-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button>
@@ -1870,7 +1853,7 @@ function promoHTML(p) {
   return `<div class="pp" role="dialog" aria-modal="true" aria-labelledby="pp-t" ${p.texto ? 'aria-describedby="pp-d"' : ''}>
     ${p.imagen ? `<img class="pp-bg" src="${img(p.imagen)}" alt="">` : ''}<i class="pp-shade" aria-hidden="true"></i>
     <button type="button" class="pp-x" aria-label="Cerrar ventana">✕</button>
-    <div class="pp-top"><span class="pp-logo"><img src="${logoSrc()}" alt=""><b>${esc(i.logoSigla || i.nombreCorto)}</b></span>${p.etiqueta ? `<span class="pp-tag">${esc(p.etiqueta)}</span>` : ''}</div>
+    <div class="pp-top"><span class="pp-logo${brandLong() ? ' b-long' : ''}"><img src="${logoSrc()}" alt=""><b>${esc(brandSigla())}</b></span>${p.etiqueta ? `<span class="pp-tag">${esc(p.etiqueta)}</span>` : ''}</div>
     <div class="pp-main">${p.antetitulo ? `<p class="pp-pre">${esc(p.antetitulo)}</p>` : ''}<h2 id="pp-t">${esc(p.titulo)}</h2>${p.texto ? `<p class="pp-txt" id="pp-d">${esc(p.texto)}</p>` : ''}</div>
     ${cs.length ? `<ol class="pp-cards pp-n${cs.length}">${cs.map((c, k) => `<li class="${k === cs.length - 1 && cs.length > 1 ? 'pp-last' : ''}">${c.t ? `<b>${esc(c.t)}</b>` : ''}${c.d ? `<span>${esc(c.d)}</span>` : ''}${k < cs.length - 1 ? '<i class="pp-arr" aria-hidden="true"></i>' : ''}</li>`).join('')}</ol>` : ''}
     ${resolveLink(p.enlace) ? `<p class="pp-cta"><a class="pp-btn" ${linkAttrs(resolveLink(p.enlace))} data-go>${esc(p.boton || 'Ver más')} <span aria-hidden="true">→</span></a></p>` : ''}
@@ -2700,7 +2683,7 @@ CUSTOM.config = () => singletonForm({
   title: 'Configuración general', icon: 'gear', sub: 'Datos institucionales, contacto, redes, SEO, correos y parámetros protegidos.',
   get: () => Object.assign({}, DB.config.inst, { fb: DB.config.redes.facebook, yt: DB.config.redes.youtube, ig: DB.config.redes.instagram, tt: DB.config.redes.tiktok, seoTitulo: DB.config.seo.titulo, seoDesc: DB.config.seo.descripcion, correoReclamos: DB.config.correoReclamos, correoContacto: DB.config.correoContacto, waNum: DB.config.whatsapp.numero, waMsg: DB.config.whatsapp.mensaje, waOn: DB.config.whatsapp.activo, limDesc: DB.config.limites.descripcion, limPed: DB.config.limites.pedido, simFail: DB.config.simularFalloCorreo }),
   fields: [
-    { n: 'nombre', l: 'Denominación oficial', req: true, full: true }, { n: 'nombreCorto', l: 'Nombre corto / siglas', req: true }, { n: 'logoSigla', l: 'Texto del logotipo generado', max: 10 },
+    { n: 'nombre', l: 'Denominación oficial', req: true, full: true }, { n: 'nombreCorto', l: 'Nombre corto / siglas', req: true }, { n: 'logoSigla', l: 'Texto del logotipo generado', max: 10, hint: 'Texto opcional junto al logotipo en los diseños Impacto, Horizonte y Campus. Si se deja vacío, se muestra el nombre corto oficial completo.' },
     { n: 'slogan', l: 'Eslogan', full: true }, { n: 'lema', l: 'Lema de cabecera' }, { n: 'descripcion', l: 'Descripción institucional (pie de página)', t: 'textarea', full: true },
     { n: 'logo', l: 'Logo institucional original aprobado', t: 'image', full: true, hint: 'Carga el archivo oficial. Se conserva completo y sin animación.' },
     { n: 'bolsaMineduUrl', l: 'Enlace de Bolsa laboral proporcionado por MINEDU', t: 'url', full: true, hint: 'Confirma el enlace oficial. Si se deja vacío se utiliza el enlace externo Bolsa de Trabajo ya registrado.' },
@@ -3080,6 +3063,9 @@ CUSTOM.respaldo = () => ({html:admHead('Respaldos y restauración','Copias compl
 /* ---------- Enrutador del panel ---------- */
 const MOD_OF = { tupacfg: 'tupa', becasimport: 'becas', becasrep: 'becas', popup: 'portada', portada: 'portada' };
 /* ---------- Temas y apariencia (solo el panel elige y edita el tema) ---------- */
+/* Estructuras sin versión oscura y los neutros claros que usan con una combinación oscura (mismos valores que :root en portal.css) */
+const NO_DARK = ['impacto', 'campus', 'horizonte', 'editorial'];
+const LIGHT_NEUTRALS_ALL = { '--page': '#fff', '--card': '#fff', '--card2': '#f6f9fd', '--bg': '#f4f7fb', '--bg2': '#eff3f9', '--white': '#fff', '--ink': '#1b2433', '--ink2': '#4a5568', '--muted': '#5f6b7c', '--line': '#dfe5ee', '--line2': '#c9d5e6', '--ok': '#18794a', '--okbg': '#e3f5ea', '--okink': '#0f5a31', '--warn': '#955800', '--warnbg': '#fff3dc', '--warnink': '#6b4200', '--err': '#c62828', '--errbg': '#fde8e8', '--errink': '#7a1414', '--info': '#1556b8', '--infobg': '#e8f0fc', '--infoink': '#0b3a7e', '--violet': '#5b3cc4', '--violetbg': '#efeafd', '--graybg': '#eef0f3', '--grayink': '#55606e', '--sh': '0 1px 2px rgba(var(--ov),.06),0 4px 14px rgba(var(--ov),.07)', '--sh2': '0 10px 34px rgba(var(--ov),.18)' };
 const DARK_NEUTRALS = { '--page': '#0b1220', '--card': '#121c32', '--card2': '#16223b', '--bg': '#0e1729', '--line': '#24324e', '--ink': '#e4e9f2', '--ink2': '#b4bfd3', '--muted': '#8e9ab0' };
 const LIGHT_NEUTRALS = { '--page': '#ffffff', '--card': '#ffffff', '--ink': '#1b2433', '--ink2': '#4a5568', '--muted': '#5f6b7c' };
 function themeScope(t) {
@@ -3110,14 +3096,16 @@ const checksHTML = t => `<ul class="tm-checks">${themeChecks(t).map(r => `<li><s
 function disenoPanel() {
   const cur = DISENOS.some(d => d[0] === DB.config.diseno) ? DB.config.diseno : 'clasico';
   const mock = k => `<div class="ds-mock ds-${k}" aria-hidden="true"><i class="m-top"></i><i class="m-hero"><b></b><b></b></i><i class="m-cards"><b></b><b></b><b></b></i></div>`;
-  return `<section class="panel ds-panel"><div class="pb"><h2 style="margin:0 0 4px">Diseño del portal</h2><p style="margin:0 0 14px;color:var(--muted)">Cambia la estructura visual de todo el sitio público. Los colores siguen el tema activo y el contenido no cambia.</p>
-    <div class="ds-grid">${DISENOS.map(([k, l, d]) => `<article class="ds-item${k === cur ? ' on' : ''}">${mock(k)}<div class="tm-body"><h3>${esc(l)} ${k === cur ? '<span class="badge ok">Activo</span>' : ''}</h3><p>${esc(d)}</p><div class="tm-acts">${k === cur ? '' : `<button class="btn sm" data-dis="${k}">${sic('check', 14)} Activar diseño</button>`}</div></div></article>`).join('')}</div>${DCFG[cur] ? impColorPanel(cur) : ''}</div></section>`;
+  const t = themeSafe(DB.config.temas[DB.config.tema]);
+  const mk = `--mk-n:${t.navy};--mk-n2:${t.navy2};--mk-b:${t.blue};--mk-g:${t.gold};--mk-d:${mix(t.navy, '#000000', .55)};--mk-l:${mix(t.blue, '#ffffff', .88)}`;
+  return `<section class="panel ds-panel ap-step"><div class="pb"><h2 class="ap-h"><span class="ap-n">1</span> Estructura de la página</h2><p class="ap-p">Cómo se organiza el sitio público: cabecera, portada y bloques. No cambia los colores ni el contenido.</p>
+    <div class="ds-grid" style="${mk}">${DISENOS.map(([k, l, d]) => `<article class="ds-item${k === cur ? ' on' : ''}">${mock(k)}<div class="tm-body"><h3>${esc(l)} ${k === cur ? '<span class="badge ok">En uso</span>' : ''}</h3><p>${esc(d)}</p><div class="tm-acts">${k === cur ? '' : `<button class="btn sm" data-dis="${k}">${sic('check', 14)} Usar esta estructura</button>`}</div></div></article>`).join('')}</div></div></section>`;
 }
 function impColorPanel(key) {
   const t = DB.config.temas[DB.config.tema]; const cf = DCFG[key]; const c = impColors(key, t), d = cf.def(t); const label = (DISENOS.find(x => x[0] === key) || [])[1];
-  return `<form class="ds-colors" data-impcol="${key}"><h3>Colores del diseño «${esc(label)}»</h3><p>Elige los colores y revisa la vista previa. «Restablecer» vuelve a los colores del tema activo.</p>
+  return `<form class="ds-colors" data-impcol="${key}"><p>Normalmente no hace falta: la estructura «${esc(label)}» ya usa los colores del paso 2. Úselo solo si quiere colores distintos únicamente en esta estructura. «Restablecer» vuelve a los colores del paso 2.</p>
     <div class="ds-cgrid">${cf.campos.map(([k, l, h]) => `<label class="ds-c"><span><b>${esc(l)}</b><small>${esc(h)}</small></span><input type="color" name="${k}" value="${esc(c[k])}" data-def="${esc(d[k])}"><code>${esc(c[k])}</code></label>`).join('')}</div>
-    <div class="ds-pre"><span>Combinaciones sugeridas:</span>${cf.presets.map(([n, v], k) => `<button type="button" class="ds-pb" data-imppre="${k}" title="${esc(n)}">${Object.values(v).slice(0, 3).map(x => `<i style="background:${x}"></i>`).join('')}${esc(n)}</button>`).join('')}</div>
+    <div class="ds-pre"><span>Partir de una combinación:</span>${dPresets(cf).map(([n, v], k) => `<button type="button" class="ds-pb" data-imppre="${k}" title="${esc(n)}">${Object.values(v).slice(0, 3).map(x => `<i style="background:${x}"></i>`).join('')}${esc(n)}</button>`).join('')}</div>
     <div class="ds-cprev ds-cprev-g" aria-hidden="true">${cf.campos.map(([k, l]) => `<i data-pk="${k}">${esc(l)}</i>`).join('')}</div>
     <div class="tm-acts"><button class="btn sm" type="submit">${sic('check', 14)} Guardar colores</button><button class="btn sm sec" type="button" data-impreset>Restablecer</button></div></form>`;
 }
@@ -3126,50 +3114,56 @@ CUSTOM.temas = (parts) => {
   const T = DB.config.temas, act = DB.config.tema;
   if (parts[2]) return temaEditor(parts[2]);
   const keys = Object.keys(T);
-  const html = admHead('Temas y apariencia', 'El tema activo se aplica a todo el portal público y al panel. Los visitantes no pueden cambiarlo.', `<a class="btn" href="#/admin/temas/nuevo">${sic('plus')} Nuevo tema</a>`, 'palette', [['Temas y apariencia']])
+  const cur = DISENOS.some(d => d[0] === DB.config.diseno) ? DB.config.diseno : 'clasico', curLabel = (DISENOS.find(x => x[0] === cur) || [])[1];
+  const custom = !!(DCFG[cur] && DB.config.disenoColores && Object.keys(DB.config.disenoColores[cur] || {}).length);
+  const html = admHead('Apariencia del portal', 'Elija la estructura y los colores del sitio público. Los cambios se aplican a todo el portal y al panel; los visitantes no pueden cambiarlos.', '', 'palette', [['Apariencia del portal']])
     + disenoPanel()
-    + `<div class="tm-active panel"><div class="pb">${themeMock(T[act], true)}<div class="tm-active-info"><span class="badge ok">${sic('check', 13)} Tema activo</span><h2>${esc(T[act].label)}</h2><p>${esc(T[act].desc || '')}</p><p class="tm-meta">${esc(T[act].modo === 'oscuro' ? 'Modo oscuro' : 'Modo claro')} · Títulos ${esc(T[act].fh)} · Texto ${esc(T[act].ff)} · Bordes ${+T[act].r}px</p><div class="tm-chips">${['navy', 'navy2', 'blue', 'gold'].map(c => `<span><i style="background:${T[act][c]}"></i>${T[act][c]}</span>`).join('')}</div><p><a class="btn sec" href="#/admin/temas/${act}">${sic('edit')} Editar tema activo</a></p></div></div></div>
-    <div class="tm-grid">${keys.map(k => { const t = T[k], on = k === act; return `<article class="tm-item${on ? ' on' : ''}">${themeMock(t)}<div class="tm-body"><h3>${esc(t.label)} ${on ? '<span class="badge ok">Activo</span>' : ''}${t.base ? '' : ' <span class="badge gray">Personalizado</span>'}</h3><p>${esc(t.desc || '')}</p><div class="tm-acts">${on ? '' : `<button class="btn sm" data-act="${k}">${sic('check', 14)} Activar</button>`}<a class="btn sm sec" href="#/admin/temas/${k}">${sic('edit', 14)} Editar</a><button class="btn sm ghost" data-dup="${k}" title="Duplicar">${sic('copy', 14)}<span class="sr-only">Duplicar ${esc(t.label)}</span></button>${!t.base && !on ? `<button class="btn sm ghost" data-del="${k}" title="Eliminar">${sic('trash', 14)}<span class="sr-only">Eliminar ${esc(t.label)}</span></button>` : ''}</div></div></article>`; }).join('')}</div>`;
+    + `<section class="panel ap-step"><div class="pb"><h2 class="ap-h"><span class="ap-n">2</span> Colores y letras</h2><p class="ap-p">Los colores institucionales, las letras y el redondeo de las esquinas. Se aplican a cualquier estructura.</p>
+    <div class="tm-active"><div>${themeMock(T[act], true)}</div><div class="tm-active-info"><span class="badge ok">${sic('check', 13)} En uso</span><h3>${esc(T[act].label)}</h3><p>${esc(T[act].desc || '')}</p><p class="tm-meta">${esc(T[act].modo === 'oscuro' ? 'Modo oscuro' : 'Modo claro')} · Títulos ${esc(T[act].fh)} · Texto ${esc(T[act].ff)} · Esquinas ${+T[act].r}px</p><div class="tm-chips">${[['navy', 'Institucional'], ['blue', 'Botones y enlaces'], ['gold', 'Destacado']].map(([c, l]) => `<span title="${esc(l)}"><i style="background:${T[act][c]}"></i>${esc(l)}</span>`).join('')}</div><p><a class="btn sec" href="#/admin/temas/${act}">${sic('edit')} Cambiar colores y letras</a></p></div></div>
+    <h3 class="ap-sub">Otras combinaciones disponibles</h3>
+    <div class="tm-grid">${keys.filter(k => k !== act).map(k => { const t = T[k]; return `<article class="tm-item">${themeMock(t)}<div class="tm-body"><h3>${esc(t.label)}${t.base ? '' : ' <span class="badge gray">Personalizado</span>'}</h3><p>${esc(t.desc || '')}</p><div class="tm-acts"><button class="btn sm" data-act="${k}">${sic('check', 14)} Usar</button><a class="btn sm sec" href="#/admin/temas/${k}">${sic('edit', 14)} Editar</a><button class="btn sm ghost" data-dup="${k}" title="Duplicar">${sic('copy', 14)}<span class="sr-only">Duplicar ${esc(t.label)}</span></button>${!t.base ? `<button class="btn sm ghost" data-del="${k}" title="Eliminar">${sic('trash', 14)}<span class="sr-only">Eliminar ${esc(t.label)}</span></button>` : ''}</div></div></article>`; }).join('')}</div>
+    <p style="margin:12px 0 0"><a class="btn sm ghost" href="#/admin/temas/nuevo">${sic('plus', 14)} Crear una combinación nueva</a></p></div></section>`
+    + (DCFG[cur] ? `<section class="panel ap-step"><details class="pb ap-adv"${custom ? ' open' : ''}><summary><span class="ap-n">3</span> Opciones avanzadas: colores solo para «${esc(curLabel)}»${custom ? ' <span class="badge warn">Personalizado</span>' : ''}</summary>${impColorPanel(cur)}</details></section>` : '');
   return {
     html, after: () => {
       const fc = $('[data-impcol]'); if (fc) {
         const CF = DCFG[fc.dataset.impcol];
         const prev = () => { CF.campos.forEach(([k]) => { const v = fc.elements[k].value; const chip = $(`[data-pk="${k}"]`, fc); if (chip) { chip.style.background = v; chip.style.color = dOn(v); } }); $$('.ds-c', fc).forEach(l => { $('code', l).textContent = $('input', l).value; }); };
         fc.addEventListener('input', prev); prev();
-        $$('[data-imppre]', fc).forEach(b => b.onclick = () => { const v = CF.presets[+b.dataset.imppre][1]; CF.campos.forEach(([k]) => { fc.elements[k].value = v[k]; }); prev(); });
+        $$('[data-imppre]', fc).forEach(b => b.onclick = () => { const v = dPresets(CF)[+b.dataset.imppre][1]; CF.campos.forEach(([k]) => { fc.elements[k].value = v[k]; }); prev(); });
         $('[data-impreset]', fc).onclick = () => { CF.campos.forEach(([k]) => { fc.elements[k].value = fc.elements[k].dataset.def; }); prev(); };
         fc.onsubmit = e => { e.preventDefault(); const key = fc.dataset.impcol; const out = {}; CF.campos.forEach(([k]) => { const v = fc.elements[k].value.toLowerCase(); if (v !== fc.elements[k].dataset.def.toLowerCase()) out[k] = v; });
-          DB.config.disenoColores = Object.assign({}, DB.config.disenoColores || {}, { [key]: out }); audit('Cambio de colores del diseño', 'Temas y apariencia', key); if (!saveDB()) return; applyTheme(); toast('Colores del diseño guardados.', 'ok'); route(); };
+          DB.config.disenoColores = Object.assign({}, DB.config.disenoColores || {}, { [key]: out }); audit('Cambio de colores del diseño', 'Temas y apariencia', key); if (!saveDB()) return; applyTheme(); toast('Colores de la estructura guardados.', 'ok'); route(); };
       }
-      $$('[data-dis]').forEach(b => b.onclick = () => { const d = DISENOS.find(x => x[0] === b.dataset.dis); DB.config.diseno = d[0]; audit('Cambio de diseño del portal', 'Temas y apariencia', d[1]); if (!saveDB()) return; applyTheme(); toast('Diseño «' + d[1] + '» activado en todo el portal.', 'ok'); route(); });
-      $$('[data-act]').forEach(b => b.onclick = () => { const k = b.dataset.act; DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', T[k].label); if(!saveDB())return; applyTheme(); toast('Tema «' + T[k].label + '» activado en todo el portal.', 'ok'); route(); });
-      $$('[data-dup]').forEach(b => b.onclick = () => { const src = T[b.dataset.dup]; let label = src.label + ' (copia)', n = 2; while (Object.values(T).some(t => t.label === label)) label = src.label + ' (copia ' + n++ + ')'; let k = slugify(label) || 'tema', i = 2; while (T[k] || k === 'nuevo') k = slugify(label) + '-' + i++; T[k] = Object.assign({}, src, { label, base: false }); audit('Creación', 'Temas y apariencia', label, 'Duplicado de ' + src.label); if(!saveDB())return; toast('Tema duplicado. Ya puede editarlo.', 'ok'); go('#/admin/temas/' + k); });
-      $$('[data-del]').forEach(b => b.onclick = async () => { const k = b.dataset.del; if (!await confirmBox(`¿Eliminar el tema <b>${esc(T[k].label)}</b>? Esta acción no se puede deshacer.`, { ok: 'Eliminar' })) return; const l = T[k].label; delete T[k]; audit('Eliminación', 'Temas y apariencia', l); if(!saveDB())return; toast('Tema eliminado.', 'ok'); route(); });
+      $$('[data-dis]').forEach(b => b.onclick = () => { const d = DISENOS.find(x => x[0] === b.dataset.dis); DB.config.diseno = d[0]; audit('Cambio de diseño del portal', 'Temas y apariencia', d[1]); if (!saveDB()) return; applyTheme(); toast('Estructura «' + d[1] + '» en uso en todo el portal.', 'ok'); route(); });
+      $$('[data-act]').forEach(b => b.onclick = () => { const k = b.dataset.act; DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', T[k].label); if(!saveDB())return; applyTheme(); toast('Combinación «' + T[k].label + '» en uso en todo el portal.', 'ok'); route(); });
+      $$('[data-dup]').forEach(b => b.onclick = () => { const src = T[b.dataset.dup]; let label = src.label + ' (copia)', n = 2; while (Object.values(T).some(t => t.label === label)) label = src.label + ' (copia ' + n++ + ')'; let k = slugify(label) || 'tema', i = 2; while (T[k] || k === 'nuevo') k = slugify(label) + '-' + i++; T[k] = Object.assign({}, src, { label, base: false }); audit('Creación', 'Temas y apariencia', label, 'Duplicado de ' + src.label); if(!saveDB())return; toast('Combinación duplicada. Ya puede editarla.', 'ok'); go('#/admin/temas/' + k); });
+      $$('[data-del]').forEach(b => b.onclick = async () => { const k = b.dataset.del; if (!await confirmBox(`¿Eliminar la combinación <b>${esc(T[k].label)}</b>? Esta acción no se puede deshacer.`, { ok: 'Eliminar' })) return; const l = T[k].label; delete T[k]; audit('Eliminación', 'Temas y apariencia', l); if(!saveDB())return; toast('Combinación eliminada.', 'ok'); route(); });
     }
   };
 };
 function temaEditor(key) {
   const T = DB.config.temas, isNew = key === 'nuevo';
-  if (!isNew && !T[key]) return { html: admHead('Tema no encontrado', 'El tema solicitado no existe.', '<a class="btn" href="#/admin/temas">Volver a temas</a>', 'palette', [['Temas y apariencia', '#/admin/temas'], ['No encontrado']]) };
+  if (!isNew && !T[key]) return { html: admHead('Combinación no encontrada', 'La combinación de colores solicitada no existe.', '<a class="btn" href="#/admin/temas">Volver a Apariencia</a>', 'palette', [['Apariencia del portal', '#/admin/temas'], ['No encontrado']]) };
   if (!ADM.work || ADM.work._tema !== key) ADM.work = Object.assign({ _tema: key }, isNew ? Object.assign({}, T[DB.config.tema], { label: '', desc: '', base: false }) : T[key]);
   const w = ADM.work, isAct = key === DB.config.tema, orig = THEME_DEFAULTS[key];
   const color = (c, l, h) => `<div class="field tm-color"><label for="tc-${c}">${l}</label><div class="tm-cin"><input type="color" id="tc-${c}" data-c="${c}" value="${esc(w[c])}" aria-label="${l}: selector"><input class="tm-hex" data-hex="${c}" value="${esc(w[c])}" maxlength="7" aria-label="${l}: código hexadecimal" spellcheck="false"></div><div class="hint">${h}</div></div>`;
   const opts = (o, v) => Object.keys(o).map(k => `<option ${k === v ? 'selected' : ''}>${k}</option>`).join('');
-  const title = isNew ? 'Nuevo tema' : 'Editar tema: ' + T[key].label;
-  const html = admHead(title, isAct ? 'Este es el <b>tema activo</b>: al guardar, el cambio se verá de inmediato en todo el portal.' : 'Los cambios se ven en la vista previa. El portal no cambia hasta que guarde y active el tema.', '<a class="btn ghost" href="#/admin/temas">Cancelar</a>', 'palette', [['Temas y apariencia', '#/admin/temas'], [isNew ? 'Nuevo' : T[key].label]])
+  const title = isNew ? 'Nueva combinación de colores' : 'Colores y letras: ' + T[key].label;
+  const html = admHead(title, isAct ? 'Esta es la combinación <b>en uso</b>: al guardar, el cambio se verá de inmediato en todo el portal.' : 'Los cambios se ven en la vista previa. El portal no cambia hasta que guarde y use esta combinación.', '<a class="btn ghost" href="#/admin/temas">Cancelar</a>', 'palette', [['Apariencia del portal', '#/admin/temas'], [isNew ? 'Nuevo' : T[key].label]])
     + `<form data-tf novalidate class="edit-grid tm-edit"><div>
       <div class="panel"><h2>Identificación</h2><div class="pb"><div class="form-grid">
-        <div class="field"><label for="tf-l">Nombre del tema *</label><input id="tf-l" name="label" value="${esc(w.label)}" maxlength="40" required></div>
+        <div class="field"><label for="tf-l">Nombre de la combinación *</label><input id="tf-l" name="label" value="${esc(w.label)}" maxlength="40" required></div>
         <div class="field"><label for="tf-d">Descripción</label><input id="tf-d" name="desc" value="${esc(w.desc || '')}" maxlength="80"></div>
         <fieldset class="field full tm-modo"><legend class="lbl">Modo</legend><label><input type="radio" name="modo" value="claro" ${w.modo !== 'oscuro' ? 'checked' : ''}> Claro</label><label><input type="radio" name="modo" value="oscuro" ${w.modo === 'oscuro' ? 'checked' : ''}> Oscuro</label></fieldset>
       </div></div></div>
       <div class="panel"><h2>Colores</h2><div class="pb"><div class="form-grid">
-        ${color('navy', 'Color principal', 'Cabecera, pie de página, títulos y menú lateral del panel.')}
-        ${color('navy2', 'Color principal secundario', 'Degradados de la franja superior y los banners.')}
-        ${color('blue', 'Color de acento', 'Botones, enlaces, íconos y gráficos.')}
+        ${color('navy', 'Color institucional', 'Cabecera, pie de página, títulos y menú lateral del panel.')}
+        ${color('navy2', 'Segundo tono del color institucional', 'Degradados de la franja superior y de los banners.')}
+        ${color('blue', 'Color de botones y enlaces', 'Botones, enlaces, íconos y gráficos.')}
         ${color('gold', 'Color destacado', 'Botones dorados, subrayados y detalles del logotipo.')}
       </div></div></div>
-      <div class="panel"><h2>Tipografía y forma</h2><div class="pb"><div class="form-grid">
+      <div class="panel"><h2>Letras y esquinas</h2><div class="pb"><div class="form-grid">
         <div class="field"><label for="tf-fh">Letra de los títulos</label><select id="tf-fh" name="fh">${opts(THEME_FONTS, w.fh)}</select></div>
         <div class="field"><label for="tf-ff">Letra del texto</label><select id="tf-ff" name="ff">${opts(BODY_FONTS, w.ff)}</select></div>
         <div class="field full"><label for="tf-r">Redondeo de esquinas: <b data-rv>${+w.r}px</b></label><input id="tf-r" type="range" name="r" min="0" max="20" step="1" value="${+w.r}"></div>
@@ -3179,7 +3173,7 @@ function temaEditor(key) {
       <div class="panel"><h2>Legibilidad</h2><div class="pb" data-chk>${checksHTML(w)}<p class="hint" style="font-size:12px;color:var(--muted);margin:8px 0 0">Referencia WCAG 2.1: 4.5:1 para texto normal.</p></div></div>
       <div class="panel"><div class="pb tm-save">
         <button class="btn" data-save="0">${sic('check')} Guardar</button>
-        ${isAct ? '' : `<button class="btn gold" data-save="1">${sic('palette')} Guardar y activar</button>`}
+        ${isAct ? '' : `<button class="btn gold" data-save="1">${sic('palette')} Guardar y usar en el portal</button>`}
         ${orig ? `<button type="button" class="btn ghost" data-reset>${sic('restore')} Restaurar valores originales</button>` : ''}
       </div></div>
     </aside></form>`;
@@ -3200,8 +3194,8 @@ function temaEditor(key) {
       $$('[data-save]').forEach(b => b.onclick = async () => {
         $$('.field.invalid', f).forEach(x => x.classList.remove('invalid')); $$('.errmsg', f).forEach(x => x.remove());
         const label = (w.label || '').trim(); let err = '';
-        if (!label) err = 'Ingrese el nombre del tema.';
-        else if (Object.entries(T).some(([k, t]) => k !== key && t.label.toLowerCase() === label.toLowerCase())) err = 'Ya existe un tema con ese nombre.';
+        if (!label) err = 'Ingrese el nombre de la combinación.';
+        else if (Object.entries(T).some(([k, t]) => k !== key && t.label.toLowerCase() === label.toLowerCase())) err = 'Ya existe una combinación con ese nombre.';
         if (err) { const fl = $('#tf-l').closest('.field'); fl.classList.add('invalid'); fl.insertAdjacentHTML('beforeend', `<div class="errmsg">${err}</div>`); $('#tf-l').focus(); return; }
         if (['navy', 'navy2', 'blue', 'gold'].some(c => !validHex(w[c]))) { toast('Revise los códigos de color: deben tener el formato #RRGGBB.', 'err'); return; }
         if (themeChecks(w).some(x => x.c < 3) && !await confirmBox('Algunas combinaciones de color tienen contraste insuficiente y pueden ser difíciles de leer. ¿Guardar de todos modos?', { ok: 'Guardar igual', danger: false })) return;
@@ -3212,7 +3206,7 @@ function temaEditor(key) {
         if (activate) { DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', label); }
         if(!saveDB())return;
         if (k === DB.config.tema) applyTheme();
-        ADM.work = null; toast(activate ? 'Tema guardado y activado en todo el portal.' : k === DB.config.tema ? 'Tema guardado. El portal ya muestra los cambios.' : 'Tema guardado.', 'ok'); go('#/admin/temas');
+        ADM.work = null; toast(activate ? 'Combinación guardada y en uso en todo el portal.' : k === DB.config.tema ? 'Combinación guardada. El portal ya muestra los cambios.' : 'Combinación guardada.', 'ok'); go('#/admin/temas');
       });
     }
   };
