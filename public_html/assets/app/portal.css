@@ -3686,3 +3686,10 @@ form[data-bs] .btn{white-space:nowrap;flex:none}
 @media(max-width:900px){.program-overview.has-gallery{grid-template-columns:minmax(0,1fr)}.program-gallery .photo-gallery{position:static}.brand img{max-width:180px;max-height:70px}}
 @media(max-width:640px){.brand img,.f-brand img{max-width:150px;max-height:60px}.hero .slide .cap h2{font-size:26px}.hero .slide img{max-height:none}.gallery-stage img,.program-gallery .gallery-stage img{height:300px}.gallery-controls{padding:10px;gap:6px}.gallery-controls .btn{padding:8px;font-size:12px}.gallery-editor-item{grid-template-columns:minmax(0,1fr)}.gallery-editor-item>div{grid-column:auto}}
 .f-brand{flex-direction:column;align-items:flex-start;gap:12px}.f-brand img{max-width:100%}.f-brand span{width:100%}
+
+/* Sin «Texto del logotipo generado» se muestra el nombre corto oficial completo: tamaño reducido y en varias líneas para no desbordar la cabecera */
+body:not(.is-admin) .b-long strong,body:not(.is-admin) .pp-logo.b-long b{font-size:21px!important;line-height:1.08!important;letter-spacing:0!important;max-width:230px;white-space:normal;overflow-wrap:break-word}
+body:not(.is-admin) .h-fbrand.b-long strong{max-width:none}
+@media (max-width:760px){body:not(.is-admin) .b-long strong,body:not(.is-admin) .pp-logo.b-long b{font-size:16px!important;max-width:170px}}
+:root[data-layout="campus"] body:not(.is-admin) .k-brand.b-long strong{font-size:17px!important;max-width:140px}
+@media (max-width:1600px){:root[data-layout="campus"] body:not(.is-admin) .k-brand.b-long img{width:46px;height:46px}}
