@@ -48,7 +48,7 @@ $input=payload($app,[]);$input['proof']=proof($app,'reclamos');$input['record']=
 $large=PortalFiles::store($app,'large.pdf',"%PDF-1.4\n".str_repeat(' ',11*1048576));
 $input=payload($app,[]);$input['proof']=proof($app,'reclamos');$input['record']=[...$claim,'adjunto'=>$large];rejects(fn()=>$app->submit('reclamos',$input),422,'Claim evidence rejects PDF over 10 MiB');
 // Cross-program isolation and role configuration are server rules, not menu rules.
-$app->createAccount(['username'=>'qacoordinator','name'=>'QA Coordinator','password'=>$password,'role'=>'coordinador','programaId'=>'apsti']);
+$app->createAccount(['username'=>'qacoordinator','name'=>'QA Coordinator','password'=>$password,'role'=>'coordinador','programaId'=>(string)array_search(1,$app->bootstrap()['data']['academico']['progMap'],true)]);
 $app->createAccount(['username'=>'qasecretary','name'=>'QA Secretary','password'=>$password,'role'=>'secretaria']);
 $adminSession=$_SESSION;
 $app->saveRole(['role'=>'secretaria','label'=>'Secretaría limitada','mods'=>['dashboard'],'expected'=>null]);
