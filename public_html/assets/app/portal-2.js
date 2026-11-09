@@ -3111,7 +3111,7 @@ function themeChecks(t) {
 const checksHTML = t => `<ul class="tm-checks">${themeChecks(t).map(r => `<li><span>${esc(r.l)}</span><b>${r.c.toFixed(1)}:1</b><span class="badge ${r.s[0]}">${r.s[1]}</span></li>`).join('')}</ul>`;
 
 /* Variantes de un diseño que solo cambian los colores: se ocultan salvo que estén activas (los colores se eligen en el paso 2). */
-const DISENO_VARIANTES = ['impacto-fu'];
+const DISENO_VARIANTES = ['impacto-chincha'];
 function disenoPanel() {
   const cur = DISENOS.some(d => d[0] === DB.config.diseno) ? DB.config.diseno : 'clasico';
   const mock = k => `<div class="ds-mock ds-${k}" aria-hidden="true"><i class="m-top"></i><i class="m-hero"><b></b><b></b></i><i class="m-cards"><b></b><b></b><b></b></i></div>`;
