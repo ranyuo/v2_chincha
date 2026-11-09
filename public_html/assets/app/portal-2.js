@@ -710,6 +710,15 @@ const admVigente = () => P('admisiones').filter(a => (a.estado === 'Publicado' |
 const matVigente = () => P('matriculas').filter(a => (a.estado === 'Publicado' || a._preview) && a.vigente)[0];
 const becaVigente = () => P('becasPeriodos').find(b => b.vigente && b.estado !== 'Borrador');
 const inst = () => DB.config.inst;
+/* Texto corto del logotipo: el configurado o, si está vacío, uno derivado del nombre corto (IESTP “Federico Uranga” → FU), para que los diseños con bloque de logotipo no se desborden. */
+const brandSigla = () => {
+  const i = inst(), own = String(i.logoSigla || '').trim(); if (own) return own;
+  const short = String(i.nombreCorto || i.nombre || '').trim(), quoted = (short.match(/[“"«]([^”"»]+)[”"»]/) || [])[1];
+  const core = (quoted || short.replace(/^(?:I\.?E\.?S\.?T?\.?P?\.?|IESTP|IEST|IES|ISTP|IST|Instituto(?: de Educación Superior)?(?: Tecnológico)?(?: Público)?)\s+/i, '')).trim();
+  if (core && core.length <= 10) return core;
+  const words = core.split(/\s+/).filter(w => /^[A-ZÁÉÍÓÚÑ]/.test(w));
+  return words.length > 1 ? words.map(w => w[0]).join('').slice(0, 10) : (core || short).slice(0, 10);
+};
 const logoSrc = () => inst().logo || '/assets/chincha/logo-chincha-347d9598.webp';
 const pubNews = () => P('noticias').filter(newsVisible).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -826,7 +835,7 @@ function uniBlocks(base, h, i) {
     bienvenida: () => { const pr = page('presentacion'); if (!pr || !isPub(pr)) return ''; const ps2 = (pr.contenido.match(/<p>[\s\S]*?<\/p>/g) || []).slice(0, 2).join('');
       return `<section class="u-band u-quote"><div class="wrap u-2"><div><div class="u-h u-h-d"><div><span class="u-k">Bienvenida</span><h2>Mensaje de la Dirección General</h2></div></div><div class="prose">${sanitize(ps2)}</div><a class="u-out u-out-w" href="#/nosotros/presentacion">Leer presentación completa</a></div>
         <figure class="u-ph"><img src="${img(dir && dir.foto)}" alt="Fotografía de ${esc(fullName(dir))}" loading="lazy"><figcaption><b>${esc(fullName(dir))}</b><em>${esc(dirJ.cargo || 'Dirección General')}</em></figcaption></figure></div></section>`; },
-    cifras: () => `<section class="u-light u-num" aria-label="Cifras institucionales"><div class="wrap"><div class="u-wm" aria-hidden="true">${esc(i.logoSigla || '')}</div>${(() => { const a = +cifra('auto:anios'); return a > 0 ? `<div class="u-numh"><span class="u-big">${cifNum(String(a))}</span><h2>años formando profesionales técnicos</h2></div>` : `<div class="u-numh"><span class="u-big">${cifNum(cifra('auto:programas'))}</span><h2>programas de estudio para tu futuro profesional</h2></div>`; })()}<div class="u-nums">${h.cifras.map(x => `<div class="stat cif${cifLink(x) ? ' cif-a' : ''}"><b>${cifNum(cifra(x.valor))}</b><span>${esc(x.label)}</span><small>Corte: ${esc(x.corte)}</small>${cifA(x)}</div>`).join('')}</div></div></section>`,
+    cifras: () => `<section class="u-light u-num" aria-label="Cifras institucionales"><div class="wrap"><div class="u-wm" aria-hidden="true">${esc(brandSigla())}</div>${(() => { const a = +cifra('auto:anios'); return a > 0 ? `<div class="u-numh"><span class="u-big">${cifNum(String(a))}</span><h2>años formando profesionales técnicos</h2></div>` : `<div class="u-numh"><span class="u-big">${cifNum(cifra('auto:programas'))}</span><h2>programas de estudio para tu futuro profesional</h2></div>`; })()}<div class="u-nums">${h.cifras.map(x => `<div class="stat cif${cifLink(x) ? ' cif-a' : ''}"><b>${cifNum(cifra(x.valor))}</b><span>${esc(x.label)}</span><small>Corte: ${esc(x.corte)}</small>${cifA(x)}</div>`).join('')}</div></div></section>`,
     programas: () => { const card = p => `<article class="u-pc"><img src="${img(p.imagen)}" alt="" loading="lazy"><div><h3><a href="#/programas/${esc(p.slug)}">${esc(p.nombre)}</a></h3><p>${esc(clamp(p.resumen || '', 90))}</p><span class="u-link">Ver programa</span></div></article>`;
       return `<section class="u-pan-s"><div class="u-pan">${uHead('Programas de estudio', 'Formación profesional técnica de 3 años con título a nombre de la Nación.', uBtn('#/programas', 'Ver todos los programas'))}${progView() === 'carrusel' && ps.length > 1 ? uCar(ps.map(card), 'Programas de estudio', true) : `<div class="u-grid">${ps.map(card).join('')}</div>`}</div></section>`; },
     noticias: () => { const ns = pubNews().slice(0, newsView('carrusel') === 'carrusel' ? 8 : 6); const card = n => `<article class="u-nc"><div class="u-nimg"><img src="${img(n.imagen, 'ph:campus:4')}" data-fit="${newsImageFit(n)}" alt="" loading="lazy">${uArrow()}</div><div class="u-nb"><time datetime="${esc(n.fecha)}">${fdate(n.fecha)}</time><h3><a href="#/noticias/${esc(n.slug)}">${esc(n.titulo)}</a></h3></div></article>`;
@@ -854,7 +863,7 @@ function impHeader(path, nav, cur) {
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
   <div class="i-top"><div class="wrap">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}<button type="button" class="u-sb i-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button></div></div>
   <header class="site-header i-head"><div class="i-bar">
-    <a class="i-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><small>${esc(i.nombreCorto)}</small></span></a>
+    <a class="i-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(brandSigla())}</strong><small>${esc(i.nombreCorto)}</small></span></a>
     <nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
     <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
     <a class="i-cta" href="#/admision">Postula · Admisión ${esc(adm ? adm.anio : y)}</a>
@@ -912,7 +921,7 @@ function horHeader(path, nav, cur) {
   const i = inst(); const adm = admVigente(); const y = new Date().getFullYear();
   const top = [['#/servicios', 'Servicios en línea'], [ext('aula'), 'Plataforma Virtual'], [ext('correo'), 'Correo institucional'], [ext('biblioteca'), 'Biblioteca virtual'], ['#/admin', 'Intranet']].filter(x => x[0]);
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
-  <header class="site-header h-head"><a class="h-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><small>Instituto de Educación Superior</small><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><em>${esc(i.slogan)}</em></span></a>
+  <header class="site-header h-head"><a class="h-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><small>Instituto de Educación Superior</small><strong>${esc(brandSigla())}</strong><em>${esc(i.slogan)}</em></span></a>
     <div class="h-rows"><div class="h-top">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}<button type="button" class="u-sb h-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button></div>
       <div class="h-main"><nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
         <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
@@ -931,7 +940,7 @@ function horFooter() {
     <div>${grp('Programas de estudio', progs().map(p => ['#/programas/' + p.slug, p.nombre]))}${grp('Institucional', [['#/nosotros/presentacion', 'Nosotros'], ['#/noticias', 'Noticias'], ['#/eventos', 'Eventos'], ['#/contacto', 'Contáctanos'], ['#/admin', 'Intranet']])}</div>
     <div class="h-fc"><h3>Sede institucional</h3><p>${ic('map')}<span>${esc(i.direccion)}</span></p><p>${ic('phone')}<a href="tel:${esc(tel)}">${esc(i.telefono)}</a></p><p>${ic('mail')}<a href="mailto:${esc(i.correo)}">${esc(i.correo)}</a></p><p>${ic('clock')}<span>${esc(i.horario)}</span></p>
       <h3>Enlaces institucionales</h3><p class="h-fl"><a ${linkAttrs(ext('minedu') || 'https://www.gob.pe/minedu')}>MINEDU</a>${ext('dre') ? `<a ${linkAttrs(ext('dre'))}>${esc(dreLabel())}</a>` : ''}</p></div>
-  </div><div class="wrap h-fb"><a class="h-fbrand" href="#/"><small>Instituto de Educación Superior</small><strong>${esc(i.logoSigla || i.nombreCorto)}</strong></a><nav aria-label="Enlaces legales"><a href="#/politica-de-privacidad">Política de privacidad</a><a href="#/terminos-de-uso">Términos de uso</a><a href="#/transparencia/documentos-gestion">Transparencia</a></nav><div class="h-soc h-soc-s">${soc}</div></div>
+  </div><div class="wrap h-fb"><a class="h-fbrand" href="#/"><small>Instituto de Educación Superior</small><strong>${esc(brandSigla())}</strong></a><nav aria-label="Enlaces legales"><a href="#/politica-de-privacidad">Política de privacidad</a><a href="#/terminos-de-uso">Términos de uso</a><a href="#/transparencia/documentos-gestion">Transparencia</a></nav><div class="h-soc h-soc-s">${soc}</div></div>
   <div class="h-copy">© ${yearNow()} ${esc(i.nombre)}${i.ruc ? ' · RUC ' + esc(i.ruc) : ''}</div></footer>
   ${DB.config.whatsapp.activo && DB.config.whatsapp.numero ? `<a class="wa" href="https://wa.me/${esc(DB.config.whatsapp.numero)}?text=${encodeURIComponent(DB.config.whatsapp.mensaje)}" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp">${bic('whatsapp')}</a>` : ''}`;
 }
@@ -976,7 +985,7 @@ function camHeader(path, nav, cur) {
   return `<a class="skip" href="#contenido" onclick="event.preventDefault();document.getElementById('contenido').focus()">Saltar al contenido principal</a>
   <div class="k-top"><div class="k-tw">${soc ? `<div class="k-soc">${soc}</div>` : ''}<nav class="k-tl" aria-label="Accesos">${top.map(([h, l]) => `<a ${linkAttrs(h)}>${esc(l)}${/^https?:/.test(h) ? '<span class="sr-only"> (enlace externo)</span>' : ''}</a>`).join('')}</nav><a class="k-portal" href="#/admin">Intranet</a>${ext('aula') ? `<a class="k-portal" ${linkAttrs(ext('aula'))}>Plataforma virtual<span class="sr-only"> (enlace externo)</span></a>` : ''}</div></div>
   <header class="site-header k-head"><div class="k-bar">
-    <a class="k-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(i.logoSigla || i.nombreCorto)}</strong><small>${esc(i.nombreCorto)}</small></span></a>
+    <a class="k-brand" href="#/" aria-label="${esc(i.nombreCorto)} - ir a inicio"><img src="${logoSrc()}" alt="Logotipo del ${esc(i.nombre)}"><span><strong>${esc(brandSigla())}</strong><small>${esc(i.nombreCorto)}</small></span></a>
     <nav class="mainnav" id="mainnav" aria-label="Navegación principal"><div class="wrap"><ul><li><a class="top home ${cur === '' ? 'active' : ''}" href="#/" aria-label="Inicio">${ic('home')}<span class="hide-lg">Inicio</span></a></li>${nav}</ul>
       <form class="mobile-search" role="search" data-search><label class="sr-only" for="q2">Buscar</label><input class="inp" id="q2" name="q" placeholder="Buscar en el sitio..."><button class="btn gold sm">Buscar</button></form></div></nav>
     <button type="button" class="u-sb k-sb" aria-expanded="false" aria-controls="u-srch" aria-label="Abrir el buscador">${ic('search')}</button>
@@ -1870,7 +1879,7 @@ function promoHTML(p) {
   return `<div class="pp" role="dialog" aria-modal="true" aria-labelledby="pp-t" ${p.texto ? 'aria-describedby="pp-d"' : ''}>
     ${p.imagen ? `<img class="pp-bg" src="${img(p.imagen)}" alt="">` : ''}<i class="pp-shade" aria-hidden="true"></i>
     <button type="button" class="pp-x" aria-label="Cerrar ventana">✕</button>
-    <div class="pp-top"><span class="pp-logo"><img src="${logoSrc()}" alt=""><b>${esc(i.logoSigla || i.nombreCorto)}</b></span>${p.etiqueta ? `<span class="pp-tag">${esc(p.etiqueta)}</span>` : ''}</div>
+    <div class="pp-top"><span class="pp-logo"><img src="${logoSrc()}" alt=""><b>${esc(brandSigla())}</b></span>${p.etiqueta ? `<span class="pp-tag">${esc(p.etiqueta)}</span>` : ''}</div>
     <div class="pp-main">${p.antetitulo ? `<p class="pp-pre">${esc(p.antetitulo)}</p>` : ''}<h2 id="pp-t">${esc(p.titulo)}</h2>${p.texto ? `<p class="pp-txt" id="pp-d">${esc(p.texto)}</p>` : ''}</div>
     ${cs.length ? `<ol class="pp-cards pp-n${cs.length}">${cs.map((c, k) => `<li class="${k === cs.length - 1 && cs.length > 1 ? 'pp-last' : ''}">${c.t ? `<b>${esc(c.t)}</b>` : ''}${c.d ? `<span>${esc(c.d)}</span>` : ''}${k < cs.length - 1 ? '<i class="pp-arr" aria-hidden="true"></i>' : ''}</li>`).join('')}</ol>` : ''}
     ${resolveLink(p.enlace) ? `<p class="pp-cta"><a class="pp-btn" ${linkAttrs(resolveLink(p.enlace))} data-go>${esc(p.boton || 'Ver más')} <span aria-hidden="true">→</span></a></p>` : ''}
@@ -2700,7 +2709,7 @@ CUSTOM.config = () => singletonForm({
   title: 'Configuración general', icon: 'gear', sub: 'Datos institucionales, contacto, redes, SEO, correos y parámetros protegidos.',
   get: () => Object.assign({}, DB.config.inst, { fb: DB.config.redes.facebook, yt: DB.config.redes.youtube, ig: DB.config.redes.instagram, tt: DB.config.redes.tiktok, seoTitulo: DB.config.seo.titulo, seoDesc: DB.config.seo.descripcion, correoReclamos: DB.config.correoReclamos, correoContacto: DB.config.correoContacto, waNum: DB.config.whatsapp.numero, waMsg: DB.config.whatsapp.mensaje, waOn: DB.config.whatsapp.activo, limDesc: DB.config.limites.descripcion, limPed: DB.config.limites.pedido, simFail: DB.config.simularFalloCorreo }),
   fields: [
-    { n: 'nombre', l: 'Denominación oficial', req: true, full: true }, { n: 'nombreCorto', l: 'Nombre corto / siglas', req: true }, { n: 'logoSigla', l: 'Texto del logotipo generado', max: 10 },
+    { n: 'nombre', l: 'Denominación oficial', req: true, full: true }, { n: 'nombreCorto', l: 'Nombre corto / siglas', req: true }, { n: 'logoSigla', l: 'Texto del logotipo generado', max: 10, hint: 'Siglas que se muestran junto al logotipo en los diseños Impacto, Horizonte, Campus y Universitario (por ejemplo, FU). Si se deja vacío, se toman del nombre corto.' },
     { n: 'slogan', l: 'Eslogan', full: true }, { n: 'lema', l: 'Lema de cabecera' }, { n: 'descripcion', l: 'Descripción institucional (pie de página)', t: 'textarea', full: true },
     { n: 'logo', l: 'Logo institucional original aprobado', t: 'image', full: true, hint: 'Carga el archivo oficial. Se conserva completo y sin animación.' },
     { n: 'bolsaMineduUrl', l: 'Enlace de Bolsa laboral proporcionado por MINEDU', t: 'url', full: true, hint: 'Confirma el enlace oficial. Si se deja vacío se utiliza el enlace externo Bolsa de Trabajo ya registrado.' },
