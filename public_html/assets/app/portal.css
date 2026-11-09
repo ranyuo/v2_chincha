@@ -3693,3 +3693,18 @@ body:not(.is-admin) .h-fbrand.b-long strong{max-width:none}
 @media (max-width:760px){body:not(.is-admin) .b-long strong,body:not(.is-admin) .pp-logo.b-long b{font-size:16px!important;max-width:170px}}
 :root[data-layout="campus"] body:not(.is-admin) .k-brand.b-long strong{font-size:17px!important;max-width:140px}
 @media (max-width:1600px){:root[data-layout="campus"] body:not(.is-admin) .k-brand.b-long img{width:46px;height:46px}}
+
+/* Apariencia del portal: tres pasos (estructura, colores y letras, opciones avanzadas) */
+.ap-step{margin-bottom:18px}
+.ap-h{display:flex;align-items:center;gap:10px;margin:0 0 4px;font-size:20px}
+.ap-n{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;border-radius:50%;background:var(--navy);color:#fff;font-size:14px;font-weight:800}
+.ap-p{margin:0 0 14px;color:var(--muted)}
+.ap-sub{margin:22px 0 10px;font-size:16px}
+.ap-step .tm-active{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:16px}
+.ap-step .tm-active h3{margin:8px 0 4px;font-size:20px;color:var(--hc)}
+.ap-adv>summary{display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;font-size:17px;color:var(--hc);list-style:none}
+.ap-adv>summary::-webkit-details-marker{display:none}
+.ap-adv>summary::after{content:"▸";margin-left:auto;color:var(--muted);transition:transform .2s}
+.ap-adv[open]>summary::after{transform:rotate(90deg)}
+.ap-adv[open]>summary{margin-bottom:12px}
+@media (max-width:760px){.ap-step .tm-active{grid-template-columns:minmax(0,1fr)}}

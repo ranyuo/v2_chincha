@@ -3110,15 +3110,18 @@ function themeChecks(t) {
 }
 const checksHTML = t => `<ul class="tm-checks">${themeChecks(t).map(r => `<li><span>${esc(r.l)}</span><b>${r.c.toFixed(1)}:1</b><span class="badge ${r.s[0]}">${r.s[1]}</span></li>`).join('')}</ul>`;
 
+/* Variantes de un diseño que solo cambian los colores: se ocultan salvo que estén activas (los colores se eligen en el paso 2). */
+const DISENO_VARIANTES = ['impacto-fu'];
 function disenoPanel() {
   const cur = DISENOS.some(d => d[0] === DB.config.diseno) ? DB.config.diseno : 'clasico';
   const mock = k => `<div class="ds-mock ds-${k}" aria-hidden="true"><i class="m-top"></i><i class="m-hero"><b></b><b></b></i><i class="m-cards"><b></b><b></b><b></b></i></div>`;
-  return `<section class="panel ds-panel"><div class="pb"><h2 style="margin:0 0 4px">Diseño del portal</h2><p style="margin:0 0 14px;color:var(--muted)">Cambia la estructura visual de todo el sitio público. Los colores siguen el tema activo y el contenido no cambia.</p>
-    <div class="ds-grid">${DISENOS.map(([k, l, d]) => `<article class="ds-item${k === cur ? ' on' : ''}">${mock(k)}<div class="tm-body"><h3>${esc(l)} ${k === cur ? '<span class="badge ok">Activo</span>' : ''}</h3><p>${esc(d)}</p><div class="tm-acts">${k === cur ? '' : `<button class="btn sm" data-dis="${k}">${sic('check', 14)} Activar diseño</button>`}</div></div></article>`).join('')}</div>${DCFG[cur] ? impColorPanel(cur) : ''}</div></section>`;
+  const list = DISENOS.filter(([k]) => k === cur || !DISENO_VARIANTES.includes(k));
+  return `<section class="panel ds-panel ap-step"><div class="pb"><h2 class="ap-h"><span class="ap-n">1</span> Estructura de la página</h2><p class="ap-p">Cómo se organiza el sitio público: cabecera, portada y bloques. No cambia los colores ni el contenido.</p>
+    <div class="ds-grid">${list.map(([k, l, d]) => `<article class="ds-item${k === cur ? ' on' : ''}">${mock(k)}<div class="tm-body"><h3>${esc(l)} ${k === cur ? '<span class="badge ok">En uso</span>' : ''}</h3><p>${esc(d)}</p><div class="tm-acts">${k === cur ? '' : `<button class="btn sm" data-dis="${k}">${sic('check', 14)} Usar esta estructura</button>`}</div></div></article>`).join('')}</div></div></section>`;
 }
 function impColorPanel(key) {
   const t = DB.config.temas[DB.config.tema]; const cf = DCFG[key]; const c = impColors(key, t), d = cf.def(t); const label = (DISENOS.find(x => x[0] === key) || [])[1];
-  return `<form class="ds-colors" data-impcol="${key}"><h3>Colores del diseño «${esc(label)}»</h3><p>Elige los colores y revisa la vista previa. «Restablecer» vuelve a los colores del tema activo.</p>
+  return `<form class="ds-colors" data-impcol="${key}"><p>Normalmente no hace falta: la estructura «${esc(label)}» ya usa los colores del paso 2. Úselo solo si quiere colores distintos únicamente en esta estructura. «Restablecer» vuelve a los colores del paso 2.</p>
     <div class="ds-cgrid">${cf.campos.map(([k, l, h]) => `<label class="ds-c"><span><b>${esc(l)}</b><small>${esc(h)}</small></span><input type="color" name="${k}" value="${esc(c[k])}" data-def="${esc(d[k])}"><code>${esc(c[k])}</code></label>`).join('')}</div>
     <div class="ds-pre"><span>Combinaciones sugeridas:</span>${cf.presets.map(([n, v], k) => `<button type="button" class="ds-pb" data-imppre="${k}" title="${esc(n)}">${Object.values(v).slice(0, 3).map(x => `<i style="background:${x}"></i>`).join('')}${esc(n)}</button>`).join('')}</div>
     <div class="ds-cprev ds-cprev-g" aria-hidden="true">${cf.campos.map(([k, l]) => `<i data-pk="${k}">${esc(l)}</i>`).join('')}</div>
@@ -3129,10 +3132,16 @@ CUSTOM.temas = (parts) => {
   const T = DB.config.temas, act = DB.config.tema;
   if (parts[2]) return temaEditor(parts[2]);
   const keys = Object.keys(T);
-  const html = admHead('Temas y apariencia', 'El tema activo se aplica a todo el portal público y al panel. Los visitantes no pueden cambiarlo.', `<a class="btn" href="#/admin/temas/nuevo">${sic('plus')} Nuevo tema</a>`, 'palette', [['Temas y apariencia']])
+  const cur = DISENOS.some(d => d[0] === DB.config.diseno) ? DB.config.diseno : 'clasico', curLabel = (DISENOS.find(x => x[0] === cur) || [])[1];
+  const custom = !!(DCFG[cur] && DB.config.disenoColores && Object.keys(DB.config.disenoColores[cur] || {}).length);
+  const html = admHead('Apariencia del portal', 'Elija la estructura y los colores del sitio público. Los cambios se aplican a todo el portal y al panel; los visitantes no pueden cambiarlos.', '', 'palette', [['Apariencia del portal']])
     + disenoPanel()
-    + `<div class="tm-active panel"><div class="pb">${themeMock(T[act], true)}<div class="tm-active-info"><span class="badge ok">${sic('check', 13)} Tema activo</span><h2>${esc(T[act].label)}</h2><p>${esc(T[act].desc || '')}</p><p class="tm-meta">${esc(T[act].modo === 'oscuro' ? 'Modo oscuro' : 'Modo claro')} · Títulos ${esc(T[act].fh)} · Texto ${esc(T[act].ff)} · Bordes ${+T[act].r}px</p><div class="tm-chips">${['navy', 'navy2', 'blue', 'gold'].map(c => `<span><i style="background:${T[act][c]}"></i>${T[act][c]}</span>`).join('')}</div><p><a class="btn sec" href="#/admin/temas/${act}">${sic('edit')} Editar tema activo</a></p></div></div></div>
-    <div class="tm-grid">${keys.map(k => { const t = T[k], on = k === act; return `<article class="tm-item${on ? ' on' : ''}">${themeMock(t)}<div class="tm-body"><h3>${esc(t.label)} ${on ? '<span class="badge ok">Activo</span>' : ''}${t.base ? '' : ' <span class="badge gray">Personalizado</span>'}</h3><p>${esc(t.desc || '')}</p><div class="tm-acts">${on ? '' : `<button class="btn sm" data-act="${k}">${sic('check', 14)} Activar</button>`}<a class="btn sm sec" href="#/admin/temas/${k}">${sic('edit', 14)} Editar</a><button class="btn sm ghost" data-dup="${k}" title="Duplicar">${sic('copy', 14)}<span class="sr-only">Duplicar ${esc(t.label)}</span></button>${!t.base && !on ? `<button class="btn sm ghost" data-del="${k}" title="Eliminar">${sic('trash', 14)}<span class="sr-only">Eliminar ${esc(t.label)}</span></button>` : ''}</div></div></article>`; }).join('')}</div>`;
+    + `<section class="panel ap-step"><div class="pb"><h2 class="ap-h"><span class="ap-n">2</span> Colores y letras</h2><p class="ap-p">Los colores institucionales, las letras y el redondeo de las esquinas. Se aplican a cualquier estructura.</p>
+    <div class="tm-active"><div>${themeMock(T[act], true)}</div><div class="tm-active-info"><span class="badge ok">${sic('check', 13)} En uso</span><h3>${esc(T[act].label)}</h3><p>${esc(T[act].desc || '')}</p><p class="tm-meta">${esc(T[act].modo === 'oscuro' ? 'Modo oscuro' : 'Modo claro')} · Títulos ${esc(T[act].fh)} · Texto ${esc(T[act].ff)} · Esquinas ${+T[act].r}px</p><div class="tm-chips">${[['navy', 'Institucional'], ['blue', 'Botones y enlaces'], ['gold', 'Destacado']].map(([c, l]) => `<span title="${esc(l)}"><i style="background:${T[act][c]}"></i>${esc(l)}</span>`).join('')}</div><p><a class="btn sec" href="#/admin/temas/${act}">${sic('edit')} Cambiar colores y letras</a></p></div></div>
+    <h3 class="ap-sub">Otras combinaciones disponibles</h3>
+    <div class="tm-grid">${keys.filter(k => k !== act).map(k => { const t = T[k]; return `<article class="tm-item">${themeMock(t)}<div class="tm-body"><h3>${esc(t.label)}${t.base ? '' : ' <span class="badge gray">Personalizado</span>'}</h3><p>${esc(t.desc || '')}</p><div class="tm-acts"><button class="btn sm" data-act="${k}">${sic('check', 14)} Usar</button><a class="btn sm sec" href="#/admin/temas/${k}">${sic('edit', 14)} Editar</a><button class="btn sm ghost" data-dup="${k}" title="Duplicar">${sic('copy', 14)}<span class="sr-only">Duplicar ${esc(t.label)}</span></button>${!t.base ? `<button class="btn sm ghost" data-del="${k}" title="Eliminar">${sic('trash', 14)}<span class="sr-only">Eliminar ${esc(t.label)}</span></button>` : ''}</div></div></article>`; }).join('')}</div>
+    <p style="margin:12px 0 0"><a class="btn sm ghost" href="#/admin/temas/nuevo">${sic('plus', 14)} Crear una combinación nueva</a></p></div></section>`
+    + (DCFG[cur] ? `<section class="panel ap-step"><details class="pb ap-adv"${custom ? ' open' : ''}><summary><span class="ap-n">3</span> Opciones avanzadas: colores solo para «${esc(curLabel)}»${custom ? ' <span class="badge warn">Personalizado</span>' : ''}</summary>${impColorPanel(cur)}</details></section>` : '');
   return {
     html, after: () => {
       const fc = $('[data-impcol]'); if (fc) {
@@ -3142,37 +3151,37 @@ CUSTOM.temas = (parts) => {
         $$('[data-imppre]', fc).forEach(b => b.onclick = () => { const v = CF.presets[+b.dataset.imppre][1]; CF.campos.forEach(([k]) => { fc.elements[k].value = v[k]; }); prev(); });
         $('[data-impreset]', fc).onclick = () => { CF.campos.forEach(([k]) => { fc.elements[k].value = fc.elements[k].dataset.def; }); prev(); };
         fc.onsubmit = e => { e.preventDefault(); const key = fc.dataset.impcol; const out = {}; CF.campos.forEach(([k]) => { const v = fc.elements[k].value.toLowerCase(); if (v !== fc.elements[k].dataset.def.toLowerCase()) out[k] = v; });
-          DB.config.disenoColores = Object.assign({}, DB.config.disenoColores || {}, { [key]: out }); audit('Cambio de colores del diseño', 'Temas y apariencia', key); if (!saveDB()) return; applyTheme(); toast('Colores del diseño guardados.', 'ok'); route(); };
+          DB.config.disenoColores = Object.assign({}, DB.config.disenoColores || {}, { [key]: out }); audit('Cambio de colores del diseño', 'Temas y apariencia', key); if (!saveDB()) return; applyTheme(); toast('Colores de la estructura guardados.', 'ok'); route(); };
       }
-      $$('[data-dis]').forEach(b => b.onclick = () => { const d = DISENOS.find(x => x[0] === b.dataset.dis); DB.config.diseno = d[0]; audit('Cambio de diseño del portal', 'Temas y apariencia', d[1]); if (!saveDB()) return; applyTheme(); toast('Diseño «' + d[1] + '» activado en todo el portal.', 'ok'); route(); });
-      $$('[data-act]').forEach(b => b.onclick = () => { const k = b.dataset.act; DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', T[k].label); if(!saveDB())return; applyTheme(); toast('Tema «' + T[k].label + '» activado en todo el portal.', 'ok'); route(); });
-      $$('[data-dup]').forEach(b => b.onclick = () => { const src = T[b.dataset.dup]; let label = src.label + ' (copia)', n = 2; while (Object.values(T).some(t => t.label === label)) label = src.label + ' (copia ' + n++ + ')'; let k = slugify(label) || 'tema', i = 2; while (T[k] || k === 'nuevo') k = slugify(label) + '-' + i++; T[k] = Object.assign({}, src, { label, base: false }); audit('Creación', 'Temas y apariencia', label, 'Duplicado de ' + src.label); if(!saveDB())return; toast('Tema duplicado. Ya puede editarlo.', 'ok'); go('#/admin/temas/' + k); });
-      $$('[data-del]').forEach(b => b.onclick = async () => { const k = b.dataset.del; if (!await confirmBox(`¿Eliminar el tema <b>${esc(T[k].label)}</b>? Esta acción no se puede deshacer.`, { ok: 'Eliminar' })) return; const l = T[k].label; delete T[k]; audit('Eliminación', 'Temas y apariencia', l); if(!saveDB())return; toast('Tema eliminado.', 'ok'); route(); });
+      $$('[data-dis]').forEach(b => b.onclick = () => { const d = DISENOS.find(x => x[0] === b.dataset.dis); DB.config.diseno = d[0]; audit('Cambio de diseño del portal', 'Temas y apariencia', d[1]); if (!saveDB()) return; applyTheme(); toast('Estructura «' + d[1] + '» en uso en todo el portal.', 'ok'); route(); });
+      $$('[data-act]').forEach(b => b.onclick = () => { const k = b.dataset.act; DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', T[k].label); if(!saveDB())return; applyTheme(); toast('Combinación «' + T[k].label + '» en uso en todo el portal.', 'ok'); route(); });
+      $$('[data-dup]').forEach(b => b.onclick = () => { const src = T[b.dataset.dup]; let label = src.label + ' (copia)', n = 2; while (Object.values(T).some(t => t.label === label)) label = src.label + ' (copia ' + n++ + ')'; let k = slugify(label) || 'tema', i = 2; while (T[k] || k === 'nuevo') k = slugify(label) + '-' + i++; T[k] = Object.assign({}, src, { label, base: false }); audit('Creación', 'Temas y apariencia', label, 'Duplicado de ' + src.label); if(!saveDB())return; toast('Combinación duplicada. Ya puede editarla.', 'ok'); go('#/admin/temas/' + k); });
+      $$('[data-del]').forEach(b => b.onclick = async () => { const k = b.dataset.del; if (!await confirmBox(`¿Eliminar la combinación <b>${esc(T[k].label)}</b>? Esta acción no se puede deshacer.`, { ok: 'Eliminar' })) return; const l = T[k].label; delete T[k]; audit('Eliminación', 'Temas y apariencia', l); if(!saveDB())return; toast('Combinación eliminada.', 'ok'); route(); });
     }
   };
 };
 function temaEditor(key) {
   const T = DB.config.temas, isNew = key === 'nuevo';
-  if (!isNew && !T[key]) return { html: admHead('Tema no encontrado', 'El tema solicitado no existe.', '<a class="btn" href="#/admin/temas">Volver a temas</a>', 'palette', [['Temas y apariencia', '#/admin/temas'], ['No encontrado']]) };
+  if (!isNew && !T[key]) return { html: admHead('Combinación no encontrada', 'La combinación de colores solicitada no existe.', '<a class="btn" href="#/admin/temas">Volver a Apariencia</a>', 'palette', [['Apariencia del portal', '#/admin/temas'], ['No encontrado']]) };
   if (!ADM.work || ADM.work._tema !== key) ADM.work = Object.assign({ _tema: key }, isNew ? Object.assign({}, T[DB.config.tema], { label: '', desc: '', base: false }) : T[key]);
   const w = ADM.work, isAct = key === DB.config.tema, orig = THEME_DEFAULTS[key];
   const color = (c, l, h) => `<div class="field tm-color"><label for="tc-${c}">${l}</label><div class="tm-cin"><input type="color" id="tc-${c}" data-c="${c}" value="${esc(w[c])}" aria-label="${l}: selector"><input class="tm-hex" data-hex="${c}" value="${esc(w[c])}" maxlength="7" aria-label="${l}: código hexadecimal" spellcheck="false"></div><div class="hint">${h}</div></div>`;
   const opts = (o, v) => Object.keys(o).map(k => `<option ${k === v ? 'selected' : ''}>${k}</option>`).join('');
-  const title = isNew ? 'Nuevo tema' : 'Editar tema: ' + T[key].label;
-  const html = admHead(title, isAct ? 'Este es el <b>tema activo</b>: al guardar, el cambio se verá de inmediato en todo el portal.' : 'Los cambios se ven en la vista previa. El portal no cambia hasta que guarde y active el tema.', '<a class="btn ghost" href="#/admin/temas">Cancelar</a>', 'palette', [['Temas y apariencia', '#/admin/temas'], [isNew ? 'Nuevo' : T[key].label]])
+  const title = isNew ? 'Nueva combinación de colores' : 'Colores y letras: ' + T[key].label;
+  const html = admHead(title, isAct ? 'Esta es la combinación <b>en uso</b>: al guardar, el cambio se verá de inmediato en todo el portal.' : 'Los cambios se ven en la vista previa. El portal no cambia hasta que guarde y use esta combinación.', '<a class="btn ghost" href="#/admin/temas">Cancelar</a>', 'palette', [['Apariencia del portal', '#/admin/temas'], [isNew ? 'Nuevo' : T[key].label]])
     + `<form data-tf novalidate class="edit-grid tm-edit"><div>
       <div class="panel"><h2>Identificación</h2><div class="pb"><div class="form-grid">
-        <div class="field"><label for="tf-l">Nombre del tema *</label><input id="tf-l" name="label" value="${esc(w.label)}" maxlength="40" required></div>
+        <div class="field"><label for="tf-l">Nombre de la combinación *</label><input id="tf-l" name="label" value="${esc(w.label)}" maxlength="40" required></div>
         <div class="field"><label for="tf-d">Descripción</label><input id="tf-d" name="desc" value="${esc(w.desc || '')}" maxlength="80"></div>
         <fieldset class="field full tm-modo"><legend class="lbl">Modo</legend><label><input type="radio" name="modo" value="claro" ${w.modo !== 'oscuro' ? 'checked' : ''}> Claro</label><label><input type="radio" name="modo" value="oscuro" ${w.modo === 'oscuro' ? 'checked' : ''}> Oscuro</label></fieldset>
       </div></div></div>
       <div class="panel"><h2>Colores</h2><div class="pb"><div class="form-grid">
-        ${color('navy', 'Color principal', 'Cabecera, pie de página, títulos y menú lateral del panel.')}
-        ${color('navy2', 'Color principal secundario', 'Degradados de la franja superior y los banners.')}
-        ${color('blue', 'Color de acento', 'Botones, enlaces, íconos y gráficos.')}
+        ${color('navy', 'Color institucional', 'Cabecera, pie de página, títulos y menú lateral del panel.')}
+        ${color('navy2', 'Segundo tono del color institucional', 'Degradados de la franja superior y de los banners.')}
+        ${color('blue', 'Color de botones y enlaces', 'Botones, enlaces, íconos y gráficos.')}
         ${color('gold', 'Color destacado', 'Botones dorados, subrayados y detalles del logotipo.')}
       </div></div></div>
-      <div class="panel"><h2>Tipografía y forma</h2><div class="pb"><div class="form-grid">
+      <div class="panel"><h2>Letras y esquinas</h2><div class="pb"><div class="form-grid">
         <div class="field"><label for="tf-fh">Letra de los títulos</label><select id="tf-fh" name="fh">${opts(THEME_FONTS, w.fh)}</select></div>
         <div class="field"><label for="tf-ff">Letra del texto</label><select id="tf-ff" name="ff">${opts(BODY_FONTS, w.ff)}</select></div>
         <div class="field full"><label for="tf-r">Redondeo de esquinas: <b data-rv>${+w.r}px</b></label><input id="tf-r" type="range" name="r" min="0" max="20" step="1" value="${+w.r}"></div>
@@ -3182,7 +3191,7 @@ function temaEditor(key) {
       <div class="panel"><h2>Legibilidad</h2><div class="pb" data-chk>${checksHTML(w)}<p class="hint" style="font-size:12px;color:var(--muted);margin:8px 0 0">Referencia WCAG 2.1: 4.5:1 para texto normal.</p></div></div>
       <div class="panel"><div class="pb tm-save">
         <button class="btn" data-save="0">${sic('check')} Guardar</button>
-        ${isAct ? '' : `<button class="btn gold" data-save="1">${sic('palette')} Guardar y activar</button>`}
+        ${isAct ? '' : `<button class="btn gold" data-save="1">${sic('palette')} Guardar y usar en el portal</button>`}
         ${orig ? `<button type="button" class="btn ghost" data-reset>${sic('restore')} Restaurar valores originales</button>` : ''}
       </div></div>
     </aside></form>`;
@@ -3215,7 +3224,7 @@ function temaEditor(key) {
         if (activate) { DB.config.tema = k; audit('Activación de tema', 'Temas y apariencia', label); }
         if(!saveDB())return;
         if (k === DB.config.tema) applyTheme();
-        ADM.work = null; toast(activate ? 'Tema guardado y activado en todo el portal.' : k === DB.config.tema ? 'Tema guardado. El portal ya muestra los cambios.' : 'Tema guardado.', 'ok'); go('#/admin/temas');
+        ADM.work = null; toast(activate ? 'Combinación guardada y en uso en todo el portal.' : k === DB.config.tema ? 'Combinación guardada. El portal ya muestra los cambios.' : 'Combinación guardada.', 'ok'); go('#/admin/temas');
       });
     }
   };
