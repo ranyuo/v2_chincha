@@ -119,4 +119,25 @@ foreach([[0,null],[3,6],[36,36]] as [$months,$expected]){
     else verify($probe->auditRetentionMonths()===$expected,"Audit retention $months months resolves to $expected");
 }
 rejects(fn()=>(new PortalApp(['audit_retention_months'=>'24']))->auditRetentionMonths(),503,'Non-integer audit retention rejected');
+// La página entrega al personal las imágenes base64 grandes como /assets/cache/…; guardar restaura el data: exacto.
+$docRoot=sys_get_temp_dir().'/portal-page-'.bin2hex(random_bytes(4));mkdir($docRoot.'/assets/cache',0700,true);$previousRoot=$_SERVER['DOCUMENT_ROOT']??null;$_SERVER['DOCUMENT_ROOT']=$docRoot;
+try{
+    // PNG válido de 80×80 con ruido, armado sin la extensión GD (no está en la imagen de QA).
+    $chunk=fn(string $type,string $body):string=>pack('N',strlen($body)).$type.$body.pack('N',crc32($type.$body));mt_srand(7);$rows='';
+    for($y=0;$y<80;$y++){$rows.="\0";for($i=0;$i<240;$i++)$rows.=chr(mt_rand(0,255));}
+    $uri='data:image/png;base64,'.base64_encode("\x89PNG\r\n\x1a\n".$chunk('IHDR',pack('NNCCCCC',80,80,8,2,0,0,0)).$chunk('IDAT',gzcompress($rows)).$chunk('IEND',''));
+    $s=$app->bootstrap();$slide=$s['data']['slides'][0]??null;verify(is_array($slide)&&strlen($uri)>8192,'Fixture slide and large inline image available');
+    $withImage=[...$slide,'imagen'=>$uri];$app->save(['revision'=>$s['revision'],'patch'=>[['path'=>['slides'],'kind'=>'rows','changes'=>[['key'=>'id:'.$slide['id'],'before'=>$slide,'after'=>$withImage]]]]]);
+    $page=$app->pageBootstrap();$pageSlide=array_values(array_filter($page['data']['slides'],fn($r)=>$r['id']===$slide['id']))[0];
+    verify(preg_match('#^/assets/cache/[a-f0-9]{32}\.png$#',$pageSlide['imagen'])===1&&is_file($docRoot.$pageSlide['imagen']),'Staff page serves large inline images as cacheable files');
+    verify(str_starts_with(array_values(array_filter($app->bootstrap()['data']['slides'],fn($r)=>$r['id']===$slide['id']))[0]['imagen'],'data:image/png;base64,'),'API bootstrap for staff keeps inline images');
+    $app->save(['revision'=>$page['revision'],'patch'=>[['path'=>['slides'],'kind'=>'rows','changes'=>[['key'=>'id:'.$slide['id'],'before'=>$pageSlide,'after'=>[...$pageSlide,'titulo'=>'QA cached image edit']]]]]]);
+    $saved=array_values(array_filter($app->bootstrap()['data']['slides'],fn($r)=>$r['id']===$slide['id']))[0];
+    verify($saved['imagen']===$uri&&$saved['titulo']==='QA cached image edit','Saving with cached image URLs restores the exact inline image');
+    file_put_contents($docRoot.$pageSlide['imagen'],'tampered');$page=$app->pageBootstrap();$tampered=array_values(array_filter($page['data']['slides'],fn($r)=>$r['id']===$slide['id']))[0];
+    rejects(fn()=>$app->save(['revision'=>$page['revision'],'patch'=>[['path'=>['slides'],'kind'=>'rows','changes'=>[['key'=>'id:'.$slide['id'],'before'=>$tampered,'after'=>[...$tampered,'titulo'=>'QA tampered']]]]]]),409,'Cache file whose bytes do not match its hash is never restored');
+}finally{
+    if($previousRoot===null)unset($_SERVER['DOCUMENT_ROOT']);else $_SERVER['DOCUMENT_ROOT']=$previousRoot;
+    foreach(glob($docRoot.'/assets/cache/*')?:[] as $file)unlink($file);rmdir($docRoot.'/assets/cache');rmdir($docRoot.'/assets');rmdir($docRoot);
+}
 echo "$passed total checks passed.\n";ob_end_flush();

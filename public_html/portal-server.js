@@ -225,15 +225,19 @@ SPECS.usuarios.afterList=()=>{
   if(panel)panel.insertAdjacentHTML('afterbegin','<div class="pb"><a class="btn" href="/roles.php">Editar permisos por rol</a><p>Seleccione los módulos habilitados para cada perfil institucional. El administrador conserva acceso completo.</p></div>');
 };
 
-// Visitantes: el servidor envía las imágenes grandes como archivos cacheables (/assets/cache/).
+// El servidor envía las imágenes grandes como archivos cacheables (/assets/cache/).
 // Tras la carga se convierten otra vez a data: en memoria, porque jsPDF necesita los datos de la imagen.
+// Visitantes: el carrusel no se usa en ningún PDF, así que no se vuelve a descargar.
+// Personal: se convierten a la vez DB, la línea base y el bootstrap para que no aparezcan cambios falsos;
+// si se guarda antes de terminar, el servidor restaura igualmente el data: original.
 window.addEventListener('load',()=>{
-  if(portalBootstrap.user||typeof DB!=='object'||!DB)return;
-  const pattern=/^\/assets\/cache\/[a-f0-9]{32}\.(png|jpg|webp|gif)$/;const refs=[];const pending=new Map();
-  const walk=node=>{for(const [key,value] of Object.entries(node)){if(typeof value==='string'){if(pattern.test(value))refs.push([node,key,value]);}else if(value&&typeof value==='object')walk(value);}};
-  walk(DB);
+  if(typeof DB!=='object'||!DB)return;
+  const staff=!!portalBootstrap.user;
+  const pattern=/^\/assets\/cache\/[a-f0-9]{32}\.(png|jpg|webp|gif)$/;const refs=new Map();
+  const walk=(node,top)=>{for(const [key,value] of Object.entries(node)){if(top&&!staff&&key==='slides')continue;if(typeof value==='string'){if(pattern.test(value)){if(!refs.has(value))refs.set(value,[]);refs.get(value).push([node,key]);}}else if(value&&typeof value==='object')walk(value,false);}};
+  for(const root of staff?[DB,portalBaseline,portalBootstrap.data]:[DB])if(root&&typeof root==='object')walk(root,true);
   const toDataURL=url=>fetch(url).then(r=>r.ok?r.blob():Promise.reject(new Error(url))).then(blob=>new Promise((ok,bad)=>{const reader=new FileReader();reader.onload=()=>ok(reader.result);reader.onerror=bad;reader.readAsDataURL(blob);}));
-  for(const [node,key,url] of refs){if(!pending.has(url))pending.set(url,toDataURL(url));pending.get(url).then(data=>{if(node[key]===url)node[key]=data;}).catch(()=>{});}
+  for(const [url,list] of refs)toDataURL(url).then(data=>{for(const [node,key] of list)if(node[key]===url)node[key]=data;}).catch(()=>{});
 });
 
 // Bibliotecas de PDF/QR y de Excel: se cargan después de mostrar la página (antes retrasaban la portada ~1,4 MB).

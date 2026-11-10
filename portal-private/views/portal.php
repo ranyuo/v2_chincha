@@ -13,6 +13,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600&family=Poppins:wght@500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600&family=Poppins:wght@500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="<?= portal_asset('portal.css') ?>">
+<?php
+$localImage=fn(mixed $v):bool=>is_string($v)&&preg_match('#^/(?!/)[^"\'<>\s?]+$#D',$v)===1;
+$pageRoot=realpath((string)($_SERVER['DOCUMENT_ROOT']??''))?:dirname(__DIR__,2).'/public_html';
+// Logo: se precarga para que la cabecera ya tenga su tamaño al dibujarse (evita el salto de diseño).
+$pageLogo=$bootstrap['data']['config']['inst']['logo']??null;
+if(!$localImage($pageLogo))$pageLogo=null;
+// Carrusel: se envían las dimensiones de sus imágenes para reservar su alto antes de que carguen (CLS).
+// No se precarga la imagen: competiría con el CSS y el JavaScript, que son los que dibujan la página.
+$imageSizes=[];$homeBlocks=$bootstrap['data']['config']['home']['bloques']??[];
+$sliderOn=!is_array($homeBlocks)||!$homeBlocks||array_filter($homeBlocks,fn($b)=>is_array($b)&&($b['k']??'')==='slider'&&!empty($b['on']));
+if($sliderOn&&empty($bootstrap['standaloneService'])){
+    $heroSlides=array_values(array_filter($bootstrap['data']['slides']??[],fn($s)=>is_array($s)&&empty($s['deleted'])&&in_array($s['estado']??'',['Publicado','Publicada','Activo','Vigente'],true)));
+    usort($heroSlides,fn($a,$b)=>(float)($a['orden']??0)<=>(float)($b['orden']??0));
+    foreach(array_slice($heroSlides,0,12) as $slide){
+        $src=$slide['imagen']??null;if(!$localImage($src)||isset($imageSizes[$src]))continue;
+        $file=realpath($pageRoot.$src);if(!$file||!str_starts_with($file,$pageRoot.DIRECTORY_SEPARATOR))continue;
+        $size=@getimagesize($file);if($size&&$size[0]>0&&$size[1]>0)$imageSizes[$src]=[(int)$size[0],(int)$size[1]];
+    }
+}
+if($pageLogo): ?>
+<link rel="preload" as="image" href="<?= htmlspecialchars($pageLogo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>">
+<?php endif; if($imageSizes): ?>
+<script>window.PORTAL_IMAGE_SIZES=<?= json_encode($imageSizes, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) ?>;</script>
+<?php endif; ?>
 </head>
 <body>
 <noscript><p style="padding:20px">Este portal requiere JavaScript habilitado.</p></noscript>
