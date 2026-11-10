@@ -122,7 +122,10 @@ rejects(fn()=>(new PortalApp(['audit_retention_months'=>'24']))->auditRetentionM
 // La página entrega al personal las imágenes base64 grandes como /assets/cache/…; guardar restaura el data: exacto.
 $docRoot=sys_get_temp_dir().'/portal-page-'.bin2hex(random_bytes(4));mkdir($docRoot.'/assets/cache',0700,true);$previousRoot=$_SERVER['DOCUMENT_ROOT']??null;$_SERVER['DOCUMENT_ROOT']=$docRoot;
 try{
-    $canvas=imagecreatetruecolor(160,160);mt_srand(7);for($x=0;$x<160;$x++)for($y=0;$y<160;$y++)imagesetpixel($canvas,$x,$y,mt_rand(0,0xffffff));ob_start();imagepng($canvas);$uri='data:image/png;base64,'.base64_encode(ob_get_clean());
+    // PNG válido de 80×80 con ruido, armado sin la extensión GD (no está en la imagen de QA).
+    $chunk=fn(string $type,string $body):string=>pack('N',strlen($body)).$type.$body.pack('N',crc32($type.$body));mt_srand(7);$rows='';
+    for($y=0;$y<80;$y++){$rows.="\0";for($i=0;$i<240;$i++)$rows.=chr(mt_rand(0,255));}
+    $uri='data:image/png;base64,'.base64_encode("\x89PNG\r\n\x1a\n".$chunk('IHDR',pack('NNCCCCC',80,80,8,2,0,0,0)).$chunk('IDAT',gzcompress($rows)).$chunk('IEND',''));
     $s=$app->bootstrap();$slide=$s['data']['slides'][0]??null;verify(is_array($slide)&&strlen($uri)>8192,'Fixture slide and large inline image available');
     $withImage=[...$slide,'imagen'=>$uri];$app->save(['revision'=>$s['revision'],'patch'=>[['path'=>['slides'],'kind'=>'rows','changes'=>[['key'=>'id:'.$slide['id'],'before'=>$slide,'after'=>$withImage]]]]]);
     $page=$app->pageBootstrap();$pageSlide=array_values(array_filter($page['data']['slides'],fn($r)=>$r['id']===$slide['id']))[0];
