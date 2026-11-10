@@ -13,6 +13,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600&family=Poppins:wght@500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600&family=Poppins:wght@500;600;700;800&family=Merriweather:wght@700;900&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="<?= portal_asset('portal.css') ?>">
+<?php
+// Imagen principal del carrusel: se precarga para no esperar a que el JavaScript arme la portada (LCP).
+$heroImage=null;$homeBlocks=$bootstrap['data']['config']['home']['bloques']??[];
+$sliderOn=!is_array($homeBlocks)||!$homeBlocks||array_filter($homeBlocks,fn($b)=>is_array($b)&&($b['k']??'')==='slider'&&!empty($b['on']));
+if($sliderOn&&empty($bootstrap['standaloneService'])){
+    $heroSlides=array_values(array_filter($bootstrap['data']['slides']??[],fn($s)=>is_array($s)&&empty($s['deleted'])&&in_array($s['estado']??'',['Publicado','Publicada','Activo','Vigente'],true)));
+    usort($heroSlides,fn($a,$b)=>(float)($a['orden']??0)<=>(float)($b['orden']??0));
+    $heroCandidate=$heroSlides[0]['imagen']??null;
+    if(is_string($heroCandidate)&&preg_match('#^/(?!/)[^"\'<>\s]+$#D',$heroCandidate))$heroImage=$heroCandidate;
+}
+if($heroImage): ?>
+<script>if(!location.hash||location.hash==='#'||location.hash==='#/'){const l=document.createElement('link');l.rel='preload';l.as='image';l.fetchPriority='high';l.href=<?= json_encode($heroImage, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) ?>;document.head.append(l);}</script>
+<?php endif; ?>
 </head>
 <body>
 <noscript><p style="padding:20px">Este portal requiere JavaScript habilitado.</p></noscript>

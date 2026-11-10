@@ -50,7 +50,7 @@ try {
         throw new PortalError(404, 'Ruta no encontrada.');
     }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') throw new PortalError(405, 'Método no permitido.');
-    $bootstrap = $app->bootstrap();
+    $bootstrap = $app->pageBootstrap();
     if($publicService)$bootstrap['standaloneService']=$publicService;
     header('Content-Type: text/html; charset=utf-8');
     require dirname(__DIR__).'/portal-private/views/portal.php';

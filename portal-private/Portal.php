@@ -340,6 +340,8 @@ final class PortalApp
     public function save(array $input): array
     {
         $user=$this->requireUser();$this->rate('save',120,60);
+        // La página entrega las imágenes grandes como /assets/cache/…; se restauran antes de comparar o guardar.
+        $input=$this->internalizeImages($input);
         if(!empty($user['cambiarClave']))throw new PortalError(403,'Cambia tu contraseña temporal antes de continuar (Mi cuenta).');
         if(!isset($input['revision'])||!is_int($input['revision'])||(!isset($input['patch'])&&!is_array($input['data']??null)))throw new PortalError(422,'Contenido o revisión no válidos.');
         // Los avisos generados al guardar (derivaciones, estados, bolsa) se envían tras responder; el cron queda como respaldo.
@@ -388,16 +390,41 @@ final class PortalApp
         $walk=function(mixed $value)use(&$walk,$dir,$types):mixed{
             if(is_array($value)){foreach($value as $k=>$v)$value[$k]=$walk($v);return $value;}
             if(!is_string($value)||strlen($value)<self::INLINE_IMAGE_MIN||!preg_match('#^data:(image/(?:png|jpeg|webp|gif));base64,#',$value,$m))return $value;
+            // Solo base64 canónico: así internalizeImages() reconstruye exactamente el mismo texto al guardar.
+            $bytes=base64_decode(substr($value,strlen($m[0])),true);
+            if($bytes===false||base64_encode($bytes)!==substr($value,strlen($m[0])))return $value;
             $name=substr(hash('sha256',$value),0,32).'.'.$types[$m[1]];$file=$dir.'/'.$name;
             if(!is_file($file)){
-                $bytes=base64_decode(substr($value,strlen($m[0])),true);
-                if($bytes===false||(new finfo(FILEINFO_MIME_TYPE))->buffer($bytes)!==$m[1])return $value;
+                if((new finfo(FILEINFO_MIME_TYPE))->buffer($bytes)!==$m[1])return $value;
                 $tmp=$file.'.'.bin2hex(random_bytes(4)).'.tmp';
                 if(@file_put_contents($tmp,$bytes,LOCK_EX)===false||!@rename($tmp,$file)){@unlink($tmp);return $value;}
             }
             return '/assets/cache/'.$name;
         };
         return $walk($data);
+    }
+    /** Inverso de externalizeImages(): devuelve el data: original de cada /assets/cache/<hash>.<ext> cuyo contenido coincide con su hash. */
+    private function internalizeImages(array $data): array
+    {
+        $root=realpath((string)($_SERVER['DOCUMENT_ROOT']??''))?:dirname(__DIR__).'/public_html';
+        $types=['png'=>'image/png','jpg'=>'image/jpeg','webp'=>'image/webp','gif'=>'image/gif'];$known=[];
+        $walk=function(mixed $value)use(&$walk,&$known,$root,$types):mixed{
+            if(is_array($value)){foreach($value as $k=>$v)$value[$k]=$walk($v);return $value;}
+            if(!is_string($value)||!preg_match('#^/assets/cache/([a-f0-9]{32})\.(png|jpg|webp|gif)$#D',$value,$m))return $value;
+            if(!array_key_exists($value,$known)){
+                $bytes=@file_get_contents($root.$value);$uri=is_string($bytes)?'data:'.$types[$m[2]].';base64,'.base64_encode($bytes):null;
+                $known[$value]=$uri!==null&&hash_equals($m[1],substr(hash('sha256',$uri),0,32))?$uri:$value;
+            }
+            return $known[$value];
+        };
+        return $walk($data);
+    }
+    /** Página HTML: también al personal se le envían las imágenes base64 grandes como archivos cacheables (save() las restaura). */
+    public function pageBootstrap(): array
+    {
+        $bootstrap=$this->bootstrap();
+        if($bootstrap['user'])$bootstrap['data']=$this->externalizeImages($bootstrap['data']);
+        return $bootstrap;
     }
     private function visitCounts(): array
     {
